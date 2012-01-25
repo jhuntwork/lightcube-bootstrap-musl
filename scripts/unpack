@@ -1,0 +1,105 @@
+#!/bin/sh
+#
+# Unpacks a tar archive and returns (hopefully!) the top-level directory
+# in the archive. Technically, it returns the second line of the archive list
+# minus the first appearance of '/' and anything afterwards.
+set +e
+
+usage="
+Usage: $0 filename [root]
+
+The root parameter is optional. If specified, the file will not be unpacked but
+the topmost (root) level of the package will be printed.
+"
+get_top_dir() {
+	case $1 in
+		*zcat)
+			top_dir=$($1 $file | tar -tf - | head -n2 | awk '{if ((FNR % 2) == 0) {print $1}}' | sed 's@/.*@@')
+			;;
+		tar)
+			top_dir=$($1 -tf $file | head -n2 | awk '{if ((FNR % 2) == 0) {print $1}}' | sed 's@/.*@@')
+			;;
+	esac
+    if [ ${r} = 1 ]
+    then
+        echo $top_dir
+        exit
+    fi
+}
+
+if [ -z $1 ]
+then
+	echo $usage
+	exit 1
+fi
+
+if [ ! -e $1 ]
+then
+	echo "No such file: $1"
+	exit 1
+fi
+
+file=$1
+
+if [ "$2" = "root" ]
+then
+    r=1
+    v=''
+else
+    r=0
+    if [ "$2" = "verbose" ]
+    then
+        v='v'
+    else
+        v=''
+    fi
+fi
+
+tar_version=$(tar --version 2>/dev/null | head -n1 | awk '{print $NF}')
+tar_major=$(echo $tar_version | awk -F. '{print $1}')
+tar_minor=$(echo $tar_version | awk -F. '{print $2}')
+ext=$(echo $1 | awk -F. '{print $NF}')
+
+if [ "${tar_major}x" = "1x" ]
+then
+	if [ $tar_minor -lt 15 ]
+	then
+		pipe=true
+	else
+		pipe=false
+	fi
+elif tar --version 2>&1 | grep -q BusyBox
+then
+	pipe=false
+else
+	echo "Unsupported version of tar: $tar_version"
+	exit 1
+fi
+
+if [ $pipe ]
+then
+	case $ext in
+		bz2|BZ2)
+			get_top_dir bzcat
+			rm -rf $top_dir
+			bzcat $file | tar -x${v}f - 2>/dev/null
+			;;
+		tgz|gz|GZ)
+			get_top_dir zcat
+			rm -rf $top_dir
+			zcat $file | tar -x${v}f - 2>/dev/null
+			;;
+		xz|tar|TAR)
+			get_top_dir tar
+			rm -rf $top_dir
+			tar -x${v}f $file 2>/dev/null
+			;;
+		*)
+	esac	
+else
+	get_top_dir tar
+	rm -rf $top_dir
+	tar -x${v}f $file 2>/dev/null
+fi
+
+echo $top_dir

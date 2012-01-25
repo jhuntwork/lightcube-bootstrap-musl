@@ -1,0 +1,15 @@
+#!/bin/sh
+NM="$1"
+VERS="$2"
+if [ ! -f $NM-$VERS.tar.gz ] ; then
+echo "Attempting to fetch $NM-$VERS.tar.gz from ftp.gnu.org via ftp..."
+ftp -n << END
+open ftp.gnu.org
+user anonymous
+passive
+binary
+cd gnu/$NM
+get $NM-$VERS.tar.gz
+bye
+END
+fi

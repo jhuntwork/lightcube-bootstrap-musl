@@ -1,0 +1,31 @@
+#!/bin/sh
+# A posix compatible way of handling exit codes from commands which
+# are piping to tee for logging purposes
+# Approximately equivalent effect to setting pipefail or
+# exiting with a value contained in $PIPESTATUS in Bash
+
+if [ -z "$1" ]
+then
+    echo "Usage: $0 [logfile]"
+    echo "Example: ((some && chain && of && commands) 2>&1 ; echo \$?) | $0 [logfile]"
+    exit 1
+fi
+
+while read line
+do
+    if [ ! -z "$lastline" ]
+    then
+        echo $lastline | tee -a $1
+    fi
+    lastline=$line
+done
+
+# Test to make sure the last line is a number
+expr $lastline + 1 >/dev/null 2>&1
+if [ $? = 0 ]
+then
+    exit $lastline
+else
+    echo "$0 $@: Failure parsing exit code: $lastline"
+    exit 1
+fi
