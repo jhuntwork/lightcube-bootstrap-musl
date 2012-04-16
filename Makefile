@@ -1,35 +1,5 @@
-#==============================================================================
-# Makefile system for bootstrapping a build environment suitable for use
-# in packaging a full GNU/Linux system with rpm.
-#
-# Modified from the LFS LiveCD build system, originally written by
-# Jeremy Huntwork, Alexander Patrakov, Justin Knierim & Thomas Pegg
-# http://wiki.linuxfromscratch.org/livecd/browser/trunk
-#
-# Build method is a mix of methodology & commands found here:
-# Linux From Scratch -> http://www.linuxfromscratch.org/lfs/
-# Cross Linux From Scratch -> http://cross-lfs.org
-# DIY-Linux -> http://www.diy-linux.org
-# Ryan Oliver -> http://linuxfromscratch.org/pipermail/lfs-dev/2008-December/062482.html
-#
-# These scripts are published under the GNU General Public License, version 2
-# See the LICENSE file for details.
-#==============================================================================
-
-#==============================================================================
-# Variables you may want to change.
-#==============================================================================
-
-# Timezone
-export timezone ?= America/New_York
-
 # Remote server location for packages
 export HTTP ?= http://dev.lightcube.us/sources
-
-#==============================================================================
-# The following variables are not expected to be changed, but could be, if you
-# understand how they are used and accept the consequences of changing them.
-#==============================================================================
 
 # Location for the temporary tools, must be a directory immediately under /
 export TT := /tools
@@ -41,9 +11,9 @@ export SRC := /sources
 export USER := builduser
 
 # Compiler optimizations
-export CFLAGS := -D_GNU_SOURCE -Os -pipe
-export LDFLAGS := -s
+export CFLAGS := -D_GNU_SOURCE -Os
 export PM := -j$(shell grep processor /proc/cpuinfo | wc -l)
+#export PM := -j1
 
 # Set the base architecture
 export MY_ARCH := $(shell uname -m)
@@ -61,15 +31,12 @@ export MY_BUILD := $(shell dirname $(MY_BASE))
 # e.g., /build-env
 export MY_ROOT := /$(shell basename $(MY_BASE))
 
-#==============================================================================
-# Environment Variables - don't modify these!
-#==============================================================================
-
+# Environment Variables
 export toolsenv := env -i HOME=/home/$(USER) LC_ALL=POSIX PATH=$(TT)/bin:/bin:/usr/bin /bin/sh -c
 export toolssh := umask 022 && cd $(MY_ROOT)
 
-export chenv-pre-sh := $(TT)/bin/env -i LC_ALL=POSIX HOME=/root TERM=$(TERM) PS1='\u:\w\$$ ' PATH=/bin:/usr/bin:/sbin:/usr/sbin:$(TT)/bin sh -c
-export chenv-post-sh := /bin/env -i HOME=/root TERM=$(TERM) PS1='\u:\w\$$ ' PATH=/bin:/usr/bin:/sbin:/usr/sbin:$(TT)/bin sh -c
+export chenv-pre-sh := $(TT)/bin/env -i LC_ALL=POSIX HOME=/root TERM=$(TERM) PS1='\u:\w\$$ ' PATH=/bin:/sbin:$(TT)/bin sh -c
+export chenv-post-sh := /bin/env -i HOME=/root TERM=$(TERM) PS1='\u:\w\$$ ' PATH=/bin:/sbin:$(TT)/bin sh -c
 
 # Architecture specifics
 ifeq ($(MY_ARCH),i686)
@@ -83,9 +50,6 @@ endif
 export BUILD_ARCH := $(MY_ARCH)-custom-linux-musl
 export BUILD_TRUE := $(MY_ARCH)-unknown-linux-musl
 
-#==============================================================================
-# Build Targets
-#==============================================================================
 
 all: test-host base package
 	@echo "All tasks completed successfully!"
@@ -97,8 +61,7 @@ test-host:
 	 echo "You must be logged in as root." && exit 1 ; fi
 
 # Build the base system
-base: dirstruct builduser build-prep
-	@exec make build 2>&1 | /tmp/multitail --no-load-global-config -o check_mail:0 -s 2 -cs -j -i logs/build.log 
+base: dirstruct builduser build
 	@touch $@
 
 build: build-tools
@@ -116,11 +79,9 @@ dirstruct:
 	-ln -nsf $(MY_BASE) /
 	install -m755 $(MY_ROOT)/scripts/unpack $(TT)/bin
 	install -m755 $(MY_ROOT)/scripts/teelog $(TT)/bin
-	install -d $(MY_BUILD)/bin $(MY_BUILD)/etc $(MY_BUILD)/lib
-	install -d $(MY_BUILD)/sbin $(MY_BUILD)/var
+	install -d $(MY_BUILD)/bin $(MY_BUILD)/etc $(MY_BUILD)/lib $(MY_BUILD)/include $(MY_BUILD)/sbin $(MY_BUILD)/var
 	install -d -m 0750 $(MY_BUILD)/root
 	install -d -m 1777 $(MY_BUILD)/tmp $(MY_BUILD)/var/tmp
-	install -d $(MY_BUILD)/usr/bin $(MY_BUILD)/usr/include $(MY_BUILD)/usr/lib $(MY_BUILD)/usr/sbin $(MY_BUILD)/usr/src
 	install -d $(MY_BUILD)/var/lock $(MY_BUILD)/var/log $(MY_BUILD)/var/run $(MY_BUILD)/var/spool
 	cp $(MY_ROOT)/etc/passwd $(MY_BUILD)/etc
 	cp $(MY_ROOT)/etc/group $(MY_BUILD)/etc
@@ -133,10 +94,6 @@ builduser:
 	@-useradd -s /bin/sh -g $(USER) -m -k /dev/null $(USER)
 	@-chown -R $(USER):$(USER) $(MY_BUILD)$(TT) $(MY_BUILD)$(SRC) $(MY_BASE)
 	@touch $@
-
-build-prep:
-	@su - $(USER) -c "$(toolsenv) '$(toolssh) && if ! wget -q -O /dev/null http://google.com ; then make wget-prebuild ; fi'"
-	@su - $(USER) -c "$(toolsenv) '$(toolssh) && make multitail-prebuild'"
 
 build-tools:
 	@su - $(USER) -c "$(toolsenv) '$(toolssh) && make tools'"
@@ -198,15 +155,15 @@ pre-sh: \
 	binutils-stage2 \
 	gcc-stage2 \
 	db-stage2 \
-	busybox-stage2 \
+	busybox-stage2
 
 createfiles:
-	-for dir in /bin /etc /usr/bin /usr/lib ; do install -dv $$dir ; done
+	-for dir in /bin /etc /lib ; do install -dv $$dir ; done
 	@-$(TT)/bin/ln -s $(TT)/bin/sh /bin
 	@-$(TT)/bin/ln -s $(TT)/bin/cat /bin
 	@-$(TT)/bin/ln -s $(TT)/bin/pwd /bin
 	@-$(TT)/bin/ln -s $(TT)/bin/stty /bin
-	@-$(TT)/bin/ln -s $(TT)/bin/perl /usr/bin
+	@-$(TT)/bin/ln -s $(TT)/bin/perl /bin
 	@cp $(TT)/etc/resolv.conf /etc
 	@touch /etc/mtab
 	@touch $@
@@ -217,16 +174,12 @@ post-sh: \
 	m4-stage2 \
 	bison-stage2 \
 	perl-stage2 \
-	cvs-stage2 \
-	openssl-stage2 \
-	Python-stage2 \
 	file-stage2 \
 	beecrypt-stage2 \
 	expat-stage2 \
 	pcre-stage2 \
 	popt-stage2 \
 	elfutils-stage2 \
-	stop \
 	rpm-stage2
 
 package: unmount
@@ -254,12 +207,6 @@ stop:
 	@echo $(GREEN)Stopping due to user specified stop point.$(WHITE)
 	@exit 1
 
-#==============================================================================
-# Targets for building packages individually. Useful for troubleshooting.
-# These are not used internally, but are expected to be specified manually on
-# the command line, i.e., 'make [target]'
-#==============================================================================
-
 %-only-prebuild: builduser
 	@su - $(USER) -c "$(toolsenv) '$(toolssh) && make $*-prebuild'"
 
@@ -279,11 +226,6 @@ stop:
 %-clean:
 	make -C packages/$* clean
 
-#==============================================================================
-# Do not call the targets below manually!
-# These are used internally and must be called by other targets.
-#==============================================================================
-
 %-prebuild: %-clean
 	hash -r && make -C packages/$* prebuild
 
@@ -298,11 +240,6 @@ stop:
 
 %-stage2-32bit: %-clean
 	make -C packages/$* stage2-32bit
-
-#==============================================================================
-# Targets to clean the tree.
-# 'clean' cleans the build system tree, scrub also cleans the installed system
-#==============================================================================
 
 clean: unmount
 	@-userdel $(USER)
@@ -322,8 +259,7 @@ clean: unmount
 scrub: clean
 	@rm -rf $(MY_BUILD)/bin $(MY_BUILD)/boot $(MY_BUILD)/etc $(MY_BUILD)/dev $(MY_BUILD)/home $(MY_BUILD)/lib \
 $(MY_BUILD)/lib64 $(MY_BUILD)/media $(MY_BUILD)/mnt $(MY_BUILD)/opt $(MY_BUILD)/proc $(MY_BUILD)/root $(MY_BUILD)/sbin \
-$(MY_BUILD)/srv $(MY_BUILD)/sys $(MY_BUILD)/tmp $(MY_BUILD)/usr $(MY_BUILD)/var
+$(MY_BUILD)/srv $(MY_BUILD)/sys $(MY_BUILD)/tmp $(MY_BUILD)/var
 
-#==============================================================================
 .PHONY: unmount clean final-environment %-stage2 %-prebuild %-stage1 %-stage1-32bit \
 	%-only-stage2 %-only-prebuild %-only-stage1 post-sh pre-sh

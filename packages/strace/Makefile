@@ -8,8 +8,6 @@ FILE= $(DIR).tar.xz
 URL-$(FILE)= http://iweb.dl.sourceforge.net/project/$(NM)/$(NM)/$(VRS)/$(FILE)
 MD5-$(FILE)= e537b2b1afeec70c0e6e27a0d0fd671e
 
-# Targets
-
 include $(MY_ROOT)/scripts/functions.mk
 
 stage2: Makefile $(FILE)

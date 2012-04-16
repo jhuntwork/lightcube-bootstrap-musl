@@ -1,52 +1,52 @@
-define echo_message
-    @echo
-    @echo "--------------------------------------------------------"
-	@echo "---> $(1) $(NM)-$(VRS) for target $@"
-    @echo "--------------------------------------------------------"
-endef
-
 define setup_build
 	@touch $(DIR)-$@.log
 	@-ln -sf ../packages/$(shell basename $(CURDIR))/$(DIR)-$@.log $(MY_ROOT)/logs/ 
-	@(unpack $(FILE) 2>&1 ; echo $$?) | teelog $(MY_ROOT)/logs/build.log >$(DIR)-$@.log
+	@>$(DIR)-$@.log
+	@(unpack $(FILE) 2>&1 ; echo $$?) | teelog $(DIR)-$@.log
 endef
 
 define clean_build
-	@(make clean 2>&1 ; echo $$?) | teelog $(MY_ROOT)/logs/build.log >>$(DIR)-$@.log
+	@(make clean 2>&1 ; echo $$?) | teelog $(DIR)-$@.log
+endef
+
+define compile
+	@(make -C $(1) -f ../Makefile compile-$@ 2>&1 ; echo $$?) | teelog $(DIR)-$@.log
 endef
 
 define std_build
-	@$(call echo_message, Building)
 	@$(setup_build)
-	@(make -C $(DIR) -f ../Makefile compile-$@ 2>&1 ; echo $$?) | teelog $(MY_ROOT)/logs/build.log >>$(DIR)-$@.log
+	@$(call compile, $(DIR))
 	@$(clean_build)
 	@touch $@
 endef
 
 define std_build_noclean
-	@$(call echo_message, Building)
 	@$(setup_build)
-	@(make -C $(DIR) -f ../Makefile compile-$@ 2>&1 ; echo $$?) | teelog $(MY_ROOT)/logs/build.log >>$(DIR)-$@.log
+	@$(call compile, $(DIR))
 	@touch $@
 endef
 
 define sep_dir_build
-	@$(call echo_message, Building)
 	@$(setup_build)
 	@rm -rf $(NM)-build
 	@install -d $(NM)-build
-	@(make -C $(NM)-build -f ../Makefile compile-$@ 2>&1 ; echo $$?) | teelog $(MY_ROOT)/logs/build.log >>$(DIR)-$@.log
+	@$(call compile, $(NM)-build)
 	@$(clean_build)
 	@touch $@
 endef
 
 define sep_dir_build_noclean
-	@$(call echo_message, Building)
 	@$(setup_build)
 	@rm -rf $(NM)-build
 	@install -dv $(NM)-build
-	@(make -C $(NM)-build -f ../Makefile compile-$@ 2>&1 ; echo $$?) | teelog $(MY_ROOT)/logs/build.log >>$(DIR)-$@.log
+	@$(call compile, $(NM)-build)
 	@touch $@
+endef
+
+define musl_prep
+	sed -i -e 's/linux-gnu/linux-musl/g' \
+	       -e 's@LIBC=gnu@LIBC=musl@' \
+               `find ../$(DIR)/ -name "confi*.guess" -o -name "confi*.sub"`
 endef
 
 # This takes the form of 'download [filename] [url] [md5sum]'

@@ -1,14 +1,12 @@
 # Zlib Makefile
 
 NM= zlib
-VRS= 1.2.5
+VRS= 1.2.6
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.bz2
 URL-$(FILE)= http://zlib.net/$(FILE)
-MD5-$(FILE)= be1e89810e66150f5b0327984d8625a0
-
-# Targets
+MD5-$(FILE)= dc2cfa0d2313ca77224b4d932b2911e9
 
 include $(MY_ROOT)/scripts/functions.mk
 
@@ -16,11 +14,11 @@ stage2: Makefile $(FILE)
 	$(std_build)
 
 compile-stage2:
-	./configure --prefix=/usr --libdir=/usr/$(MY_LIBDIR)
+	# Busybox doesn't support mktemp -u
+	sed -i 's@mktemp -u@mktemp@' Makefile.in
+	./configure --prefix='' --static
 	make
 	make install
-	mv /usr/$(MY_LIBDIR)/libz.so.* /$(MY_LIBDIR)/
-	ln -sf ../../$(MY_LIBDIR)/libz.so.1.2.5 /usr/$(MY_LIBDIR)/libz.so
 
 clean:
 	-rm -rf $(DIR)

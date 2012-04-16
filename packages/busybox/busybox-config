@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
-# Busybox version: 1.19.3
-# Mon Dec 19 21:01:54 2011
+# Busybox version: 1.19.4
+# Sun Apr 15 11:38:22 2012
 #
 CONFIG_HAVE_DOT_CONFIG=y
 
@@ -54,7 +54,7 @@ CONFIG_FEATURE_SYSLOG=y
 #
 # Build Options
 #
-# CONFIG_STATIC is not set
+CONFIG_STATIC=y
 # CONFIG_PIE is not set
 # CONFIG_NOMMU is not set
 # CONFIG_BUILD_LIBBUSYBOX is not set
@@ -478,10 +478,10 @@ CONFIG_VLOCK=y
 #
 # Linux Ext2 FS Progs
 #
-CONFIG_CHATTR=y
-CONFIG_FSCK=y
-CONFIG_LSATTR=y
-CONFIG_TUNE2FS=y
+# CONFIG_CHATTR is not set
+# CONFIG_FSCK is not set
+# CONFIG_LSATTR is not set
+# CONFIG_TUNE2FS is not set
 
 #
 # Linux Module Utilities
@@ -543,11 +543,11 @@ CONFIG_FINDFS=y
 CONFIG_FLOCK=y
 CONFIG_FREERAMDISK=y
 # CONFIG_FSCK_MINIX is not set
-CONFIG_MKFS_EXT2=y
+# CONFIG_MKFS_EXT2 is not set
 # CONFIG_MKFS_MINIX is not set
 # CONFIG_FEATURE_MINIX2 is not set
-CONFIG_MKFS_REISER=y
-CONFIG_MKFS_VFAT=y
+# CONFIG_MKFS_REISER is not set
+# CONFIG_MKFS_VFAT is not set
 CONFIG_GETOPT=y
 CONFIG_FEATURE_GETOPT_LONG=y
 CONFIG_HEXDUMP=y

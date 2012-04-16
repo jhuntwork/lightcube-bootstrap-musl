@@ -10,8 +10,6 @@ MD5-$(FILE)= a1931c70e1273e3450d5036fe273d25c
 
 PATCH= posix.patch
 
-# Targets
-
 include $(MY_ROOT)/scripts/functions.mk
 
 stage2: Makefile $(FILE) $(PATCH)
@@ -19,17 +17,15 @@ stage2: Makefile $(FILE) $(PATCH)
 
 compile-stage2:
 	patch -Np1 -i ../$(PATCH)
-	sed -i 's@linux-gnu@linux-musl@g' config.sub
-	hush -c 'CC="gcc" ./configure --prefix=/usr \
-    --host=$(BUILD_TRUE) \
-    --build=$(BUILD_TRUE) \
-    --target=$(BUILD_TRUE) \
-    --disable-cpp \
+	$(musl_prep)
+	./configure --prefix='' \
 	--enable-utf8 \
 	--enable-unicode-properties \
-	--enable-pcregrep-libz'
-	hush -c 'make'
-	hush -c 'make install'
+	--enable-pcregrep-libz \
+	--disable-shared \
+	--enable-static
+	make $(PM)
+	make install
 
 clean:
 	-rm -rf $(DIR)

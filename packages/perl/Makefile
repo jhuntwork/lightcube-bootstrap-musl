@@ -4,15 +4,13 @@ NM= perl
 VRS= 5.14.2
 DIR= $(NM)-$(VRS)
 
-FILE= $(DIR).tar.bz2
-URL-$(FILE)= $(HTTP)/$(NM)/$(FILE)
-MD5-$(FILE)= 04a4c5d3c1f9f19d77daff8e8cd19a26
-
-# Targets
+FILE= $(DIR).tar.gz
+URL-$(FILE)= http://www.cpan.org/src/5.0/$(FILE)
+MD5-$(FILE)= 3306fbaf976dcebdcd49b2ac0be00eb9
 
 include $(MY_ROOT)/scripts/functions.mk
 
-stage1: $(FILE) $(PATCH)
+stage1: $(FILE)
 	$(std_build)
 
 compile-stage1:
@@ -24,7 +22,7 @@ compile-stage1:
 	echo 'libc="$(TT)/lib/libc.so"' >> hints/linux.sh
 	sed -i 's@-fstack-protector@@g' Configure
 	./Configure -des -Accflags='-D_GNU_SOURCE' -Dprefix=$(TT)
-	make $(PM)
+	make
 	cp -v perl cpan/podlators/pod2man $(TT)/bin
 	mkdir -p $(TT)/lib/perl5/$(VRS)
 	cp -R lib/* $(TT)/lib/perl5/$(VRS)
@@ -37,17 +35,15 @@ stage2: Makefile $(FILE)
 	$(std_build)
 
 compile-stage2:
-	sed -i -e "s|BUILD_ZLIB\s*= True|BUILD_ZLIB = False|" \
-	 -e "s|INCLUDE\s*= ./zlib-src|INCLUDE    = /usr/include|" \
-	 -e "s|LIB\s*= ./zlib-src|LIB        = /usr/$(MY_LIBDIR)|" \
-      cpan/Compress-Raw-Zlib/config.in
-	hush -c 'sh Configure -des -Dprefix=/usr \
-	 -Dvendorprefix=/usr           \
-	 -Dman1dir=/usr/share/man/man1 \
-	 -Dman3dir=/usr/share/man/man3 \
-	 -Dpager="/usr/bin/less -isR"'
-	hush -c 'make $(PM) OPTIMIZE="$$CFLAGS"'
-	hush -c 'make install'
+	for file in `grep -l -r "/usr" .` ; do sed -i 's@/usr@/@g' $$file ; done 
+	sed -i 's@-fstack-protector@@g' Configure
+	sh Configure -des -Dprefix=/ \
+	 -Dvendorprefix=/           \
+	 -Dman1dir=/share/man/man1 \
+	 -Dman3dir=/share/man/man3 \
+	 -Dpager="/bin/less -isR"
+	make OPTIMIZE="$$CFLAGS"
+	make install
 
 clean:
 	-rm -rf $(DIR)

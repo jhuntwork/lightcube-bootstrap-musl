@@ -6,8 +6,8 @@
 
 if [ -z "$1" ]
 then
-    echo "Usage: $0 [logfile]"
-    echo "Example: ((some && chain && of && commands) 2>&1 ; echo \$?) | $0 [logfile]"
+    printf "Usage: $0 [logfile]\n"
+    printf "Example: ((some && chain && of && commands) 2>&1 ; echo \$?) | $0 [logfile]\n"
     exit 1
 fi
 
@@ -15,17 +15,17 @@ while read line
 do
     if [ ! -z "$lastline" ]
     then
-        echo $lastline | tee -a $1
+	printf "%s\n" "$lastline" | tee -a $1
     fi
-    lastline=$line
+    lastline="$line"
 done
 
 # Test to make sure the last line is a number
 expr $lastline + 1 >/dev/null 2>&1
-if [ $? = 0 ]
+if [ $? -eq 0 ]
 then
     exit $lastline
 else
-    echo "$0 $@: Failure parsing exit code: $lastline"
+    printf "$0 $@: Failure parsing exit code: $lastline\n"
     exit 1
 fi
