@@ -154,7 +154,6 @@ pre-sh: \
 	zlib-stage2 \
 	binutils-stage2 \
 	gcc-stage2 \
-	db-stage2 \
 	busybox-stage2
 
 createfiles:
@@ -175,12 +174,8 @@ post-sh: \
 	bison-stage2 \
 	perl-stage2 \
 	file-stage2 \
-	beecrypt-stage2 \
-	expat-stage2 \
-	pcre-stage2 \
-	popt-stage2 \
-	elfutils-stage2 \
-	rpm-stage2
+	libarchive-stage2 \
+	pacman-stage2 \
 
 package: unmount
 	@echo "Packaging build environment..."

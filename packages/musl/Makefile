@@ -1,12 +1,12 @@
 # musl Makefile
 
 NM= musl
-VRS= 0.8.7-20120414
+VRS= 0.8.9
 DIR= $(NM)-$(VRS)
 
-FILE= $(DIR).tar.bz2
-URL-$(FILE)= $(HTTP)/$(NM)/$(FILE)
-MD5-$(FILE)= 01fe8338a72954e21414f6f2c11d5b0e
+FILE= $(DIR).tar.gz
+URL-$(FILE)= http://www.etalabs.net/musl/releases/$(FILE)
+MD5-$(FILE)= 1dfb3ba92ec08073bb982efc60b058cb
 
 FILE1= config-x86_64
 
@@ -29,13 +29,6 @@ stage2: $(FILE)
 	$(std_build)
 
 compile-stage2:
-	sed -i "/getdate /s@.*@&\nint stime(time_t *t);@" include/time.h
-	sed -i "s@^#ifdef _GNU_SOURCE.*@&\nint daemon(int nochdir, int noclose);\nint getdomainname(char *name, size_t len);@" include/unistd.h
-	sed -i "/^pid_t/s@.*@&\n\n#ifdef _GNU_SOURCE\nvoid cfmakeraw(struct termios *t);\nint cfsetspeed(struct termios *, speed_t);\n#endif@" include/termios.h
-	echo "#undef powerof2" >>include/sys/param.h
-	echo "#define powerof2(x) ((((x) - 1) & (x)) == 0)" >>include/sys/param.h
-	echo "#undef __CONCAT" >>include/sys/param.h
-	echo "#define __CONCAT(x,y)   x ## y" >>include/sys/param.h
 	install ../$(FILE1) config.mak
 	make CC=gcc $(PM)
 	make install

@@ -1,34 +1,19 @@
 # Gcc Makefile
 
 NM= gcc
-VRS= 4.5.3
+VRS= 4.2.4
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.bz2
 URL-$(FILE)= http://ftp.gnu.org/gnu/gcc/$(DIR)/$(FILE)
-MD5-$(FILE)= 8e0b5c12212e185f3e4383106bfa9cc6
-
-FILE1= mpfr-3.1.0.tar.bz2
-URL-$(FILE1)= $(HTTP)/mpfr/$(FILE1)
-MD5-$(FILE1)= 238ae4a15cc3a5049b723daef5d17938
-
-FILE2= gmp-5.0.4.tar.bz2
-URL-$(FILE2)= ftp://ftp.gmplib.org/pub/gmp-5.0.4/$(FILE2)
-MD5-$(FILE2)= 50c3edcb7c9438e04377ee9a1a061b79
-
-FILE3= mpc-0.9.tar.gz
-URL-$(FILE3)= $(HTTP)/mpc/$(FILE3)
-MD5-$(FILE3)= 0d6acab8d214bd7d1fbbc593e83dd00d
+MD5-$(FILE)= d79f553e7916ea21c556329eacfeaa16
 
 include $(MY_ROOT)/scripts/functions.mk
 
-prebuild: $(FILE) $(FILE1) $(FILE2) $(FILE3)
+prebuild: $(FILE)
 	$(sep_dir_build)
 
 compile-prebuild:
-	cd ../$(DIR) ; mv $$(unpack ../$(FILE1) silent) mpfr
-	cd ../$(DIR) ; mv $$(unpack ../$(FILE2) silent) gmp
-	cd ../$(DIR) ; mv $$(unpack ../$(FILE3) silent) mpc
 	$(musl_prep)
 	cd ../$(DIR) ; for file in $$(find gcc/config/i386 -name linux64.h -o -name linux.h) ; do \
 	sed -i -e 's@/lib\(64\)\?\(32\)\?/ld@$(TT)&@g' \
@@ -60,19 +45,14 @@ compile-prebuild:
 	--disable-libssp \
 	--disable-libgomp \
 	--disable-multilib \
-	--enable-languages=c \
-	--with-mpfr-include=`pwd`/../$(DIR)/mpfr/src \
-	--with-mpfr-lib=`pwd`/mpfr/src/.libs
+	--enable-languages=c
 	make $(PM)
 	make install
 
-stage1: $(FILE) $(FILE1) $(FILE2) $(FILE3)
+stage1: $(FILE)
 	$(sep_dir_build)
 
 compile-stage1:
-	cd ../$(DIR) ; mv $$(unpack ../$(FILE1) silent) mpfr
-	cd ../$(DIR) ; mv $$(unpack ../$(FILE2) silent) gmp
-	cd ../$(DIR) ; mv $$(unpack ../$(FILE3) silent) mpc
 	$(musl_prep)
 	cat ../$(DIR)/gcc/limitx.h ../$(DIR)/gcc/glimits.h ../$(DIR)/gcc/limity.h > \
 	   `dirname $$($(BUILD_ARCH)-gcc -print-libgcc-file-name)`/include/limits.h
@@ -105,9 +85,7 @@ compile-stage1:
 	--disable-libssp \
 	--disable-libmudflap \
 	--disable-bootstrap \
-	--enable-languages=c,c++ \
-	--with-mpfr-include=`pwd`/../$(DIR)/mpfr/src \
-	--with-mpfr-lib=`pwd`/mpfr/src/.libs
+	--enable-languages=c,c++
 	make $(PM)
 	make install
 	ln -sf gcc $(TT)/bin/cc
@@ -115,13 +93,10 @@ compile-stage1:
 	readelf -l a.out | grep $(TT)
 	rm -vf a.out
 
-stage2: Makefile $(FILE) $(FILE1) $(FILE2) $(FILE3)
+stage2: Makefile $(FILE)
 	$(sep_dir_build)
 
 compile-stage2:
-	cd ../$(DIR) ; mv $$(unpack ../$(FILE1) silent) mpfr
-	cd ../$(DIR) ; mv $$(unpack ../$(FILE2) silent) gmp
-	cd ../$(DIR) ; mv $$(unpack ../$(FILE3) silent) mpc
 	$(musl_prep)
 	cd ../$(DIR) ; for file in $$(find gcc/config/i386 -name linux64.h -o -name linux.h) ; \
         do sed -i -e 's@lib/ld-linux.so.2@lib/ld-musl-i386.so.1@' \
@@ -132,7 +107,6 @@ compile-stage2:
 	cd ../$(DIR) ; sed -i '/#define STANDARD_INCLUDE_DIR/s@"/usr/include"@"/include"@g' gcc/cppdefault.c
 	cd ../$(DIR) ; sed -i 's/install_to_$$(INSTALL_DEST) //' libiberty/Makefile.in
 	cd ../$(DIR) ; sed -i '/include <link.h>/s@^.*@/\*&\*/@' gcc/unwind-dw2-fde-glibc.c
-	cd ../$(DIR) ; sed -i '/   *attribute_mode/s@attr@#&@' gcc/config/i386/i386-builtin-types.awk
 	cd ../$(DIR) ; sed -i 's,\./fixinc\.sh,-c true,' gcc/Makefile.in
 	cd ../$(DIR) ; rm -rf libstdc++-v3/config/os/gnu-linux && ln -s generic libstdc++-v3/config/os/gnu-linux
 	../$(DIR)/configure \
