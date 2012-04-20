@@ -1,4 +1,4 @@
-These build scripts will bootstrap a build environment from which rpm packages
+These build scripts will bootstrap a build environment from which pacmam packages
 for the LightCube OS base system can be built.
 
 To begin building modify 'Makefile' to meet your specific needs and then issue
