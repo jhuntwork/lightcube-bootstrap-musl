@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.xz
 URL-$(FILE)= http://www.kernel.org/pub/linux/utils/util-linux/v2.21/$(FILE)
-MD5-$(FILE)= ad602dcd528f340b1329cfa6200d8f80
+SHA256-$(FILE)= 6ffaffb46bfb1aa403f83f0c8d2700e5ec35ffcb35a0573adb10404ed16c9004
 
 FILE1= ttydefaults.h
 PATCH= util-linux-more-regex.patch

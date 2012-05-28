@@ -2,15 +2,15 @@ define setup_build
 	@touch $(DIR)-$@.log
 	@-ln -sf ../packages/$(shell basename $(CURDIR))/$(DIR)-$@.log $(MY_ROOT)/logs/ 
 	@>$(DIR)-$@.log
-	@(unpack $(FILE) 2>&1 ; echo $$?) | teelog $(DIR)-$@.log
+	@unpack $(FILE) 2>&1 | tee $(DIR)-$@.log >>$(MY_ROOT)/logs/build.log
 endef
 
 define clean_build
-	@(make clean 2>&1 ; echo $$?) | teelog $(DIR)-$@.log
+	@make clean 2>&1 | tee $(DIR)-$@.log >>$(MY_ROOT)/logs/build.log
 endef
 
 define compile
-	@(make -C $(1) -f ../Makefile compile-$@ 2>&1 ; echo $$?) | teelog $(DIR)-$@.log
+	@make -C $(1) -f ../Makefile compile-$@ 2>&1 | tee $(DIR)-$@.log >>$(MY_ROOT)/logs/build.log
 endef
 
 define std_build
@@ -49,21 +49,26 @@ define musl_prep
                `find ../$(DIR)/ -name "confi*.guess" -o -name "confi*.sub"`
 endef
 
-# This takes the form of 'download [filename] [url] [md5sum]'
+# This takes the form of 'download [filename] [url] [sha256sum]'
 define download
 	@cd $(SRC) ; \
-	if ! echo "$(3)  $(SRC)/$(1)" | md5sum -c - >/dev/null 2>&1 ; then \
-	    wget -c "$(2)" ; \
-    fi
-	@if echo "$(3)  $(SRC)/$(1)" | md5sum -c - >/dev/null 2>&1 ; then \
-	    echo ---> md5sum check on "$(SRC)/$(1)": OK ; \
+	if ! echo "$(3)  $(SRC)/$(1)" | sha256sum -c - >/dev/null 2>&1 ; then \
+	    FILE=`basename "$(2)"` ; \
+	    if [ -f "$$FILE" ] ; then \
+	       wget -c -O "$$FILE" "$(2)" || (rm -f $$FILE && wget -O "$$FILE" "$(2)") ; \
+            else \
+               wget -O "$$FILE" "$(2)" ; \
+	    fi ; \
+        fi
+	@if echo "$(3)  $(SRC)/$(1)" | sha256sum -c - >/dev/null 2>&1 ; then \
+	    echo sha256sum check on "$(SRC)/$(1)": OK ; \
 	else \
-        echo ---> md5sum check on "$(SRC)/$(1)": FAILED ; \
-	    echo      The md5sum for the downloaded file is: $$(md5sum $(SRC)/$(1) | awk '{print $$1}') ; \
-        exit 1 ; \
-    fi
+            echo sha256sum check on "$(SRC)/$(1)": FAILED ; \
+	    echo      The sha256sum for the downloaded file is: $$(sha256sum $(SRC)/$(1) | awk '{print $$1}') ; \
+            exit 1 ; \
+        fi
 	@ln -sf "$(SRC)/$(1)" .
 endef
 
 %.gz %.tgz %.xz %.bz2 %.zip %.patch %.diff %.rules %.ttf %.jpg %.run:
-	$(call download,$@,$(URL-$@),$(MD5-$@))
+	$(call download,$@,$(URL-$@),$(SHA256-$@))

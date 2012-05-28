@@ -4,9 +4,9 @@ NM= make
 VRS= 3.82
 DIR= $(NM)-$(VRS)
 
-FILE= $(DIR).tar.bz2
-URL-$(FILE)= $(HTTP)/$(NM)/$(FILE)
-MD5-$(FILE)= 1a11100f3c63fcf5753818e59d63088f
+FILE= $(DIR).tar.gz
+URL-$(FILE)= http://ftp.gnu.org/gnu/$(NM)/$(FILE)
+SHA256-$(FILE)= 3d991b33e604187c5881a0abc2e102d5b9776da5569640e73778f85d617242e7
 
 include $(MY_ROOT)/scripts/functions.mk
 

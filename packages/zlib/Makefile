@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.bz2
 URL-$(FILE)= http://zlib.net/$(FILE)
-MD5-$(FILE)= 2ab442d169156f34c379c968f3f482dd
+SHA256-$(FILE)= 49e2e9658dfb036900da6ea0267a737fa3c4eee6666776d378c79d52e9334934
 
 include $(MY_ROOT)/scripts/functions.mk
 

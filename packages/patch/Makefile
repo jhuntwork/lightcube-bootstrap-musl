@@ -4,9 +4,9 @@ NM= patch
 VRS= 2.6.1
 DIR= $(NM)-$(VRS)
 
-FILE= $(DIR).tar.bz2
-URL-$(FILE)= $(HTTP)/$(NM)/$(FILE)
-MD5-$(FILE)= 0818d1763ae0c4281bcdc63cdac0b2c0
+FILE= $(DIR).tar.xz
+URL-$(FILE)= http://ftp.gnu.org/gnu/$(NM)/$(FILE)
+SHA256-$(FILE)= f8da42cd777e49c4c29092d8595b36daf24cd93a38dca97f3489f1a4fb1301a0
 
 include $(MY_ROOT)/scripts/functions.mk
 
@@ -14,7 +14,7 @@ stage1: $(FILE)
 	$(std_build)
 
 compile-stage1:
-	sed -i 's/linux-gnu/linux-musl/g' `find . -name config.guess -o -name config.sub`
+	$(musl_prep)
 	./configure --prefix=$(TT)
 	make $(PM)
 	make install
@@ -23,7 +23,7 @@ stage2: Makefile $(FILE)
 	$(std_build)
 
 compile-stage2:
-	sed -i 's/linux-gnu/linux-musl/g' `find . -name config.guess -o -name config.sub`
+	$(musl_prep)
 	./configure --prefix=''
 	make $(PM)
 	make install

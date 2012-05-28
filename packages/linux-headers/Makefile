@@ -6,16 +6,16 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.bz2
 URL-$(FILE)= http://www.kernel.org/pub/linux/kernel/v3.0/$(FILE)
-MD5-$(FILE)= cb5f959dfb3009bcc2a6e4ebf162174e
+SHA256-$(FILE)= 4527f29d8a08ae57e9e73d4d1bd61192e36dbaabfe007c25152a7d74648bef01
 
 PATCH= linux-noperl-headers.patch
 
 include $(MY_ROOT)/scripts/functions.mk
 
-prebuild: $(FILE)
+stage0: $(FILE)
 	$(std_build)
 
-compile-prebuild:
+compile-stage0:
 	patch -Np1 -i ../$(PATCH)
 	install -dv $(TT)/include
 	make mrproper
@@ -34,4 +34,4 @@ compile-stage2:
 clean:
 	-rm -rf $(DIR)
 
-.PHONY: compile-prebuild clean compile-stage2
+.PHONY: compile-stage0 compile-stage2 clean

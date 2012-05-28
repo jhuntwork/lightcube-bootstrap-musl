@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://www.etalabs.net/musl/releases/$(FILE)
-MD5-$(FILE)= 6ee1442f40c183c4dd37e63c5c0841aa
+SHA256-$(FILE)= 8d2e452dd15c550688d24058126b3b167d2de9e69fc05d0964fd493b150c7429
 
 PATCH= musl-upstream-fixes.patch
 

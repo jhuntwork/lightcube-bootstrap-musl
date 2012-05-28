@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://projects.archlinux.org/pacman.git/snapshot/$(FILE)
-MD5-$(FILE)= 15ea343a147e288af0318a6eb812bcd2
+SHA256-$(FILE)= a6911ecbde87891c05bcb0e962037eae635d339d5d61159b5ab8ed26bcdda852
 
 PATCH1= pacman-makepkg_portability.patch
 PATCH2= pacman-purge_targets_fix.patch
@@ -23,7 +23,7 @@ compile-stage2:
 	sed -i 's@usr/@@g' etc/makepkg.conf.in etc/pacman.conf.in
 	sed -i "/MAN_DIRS/s@(.*)@({,local/}{,share/},opt/*}/{man,info})@" etc/makepkg.conf.in
 	sed -i -e '/-O2 -pipe/s@^#@@' \
-          -e '/-O2 -pipe/s@-O2 -pipe@-D_GNU_SOURCE -O2 -pipe -fomit-frame-pointer -fno-asynchronous-unwind-tables@' \
+          -e '/-O2 -pipe/s@-O2 -pipe@$(CFLAGS)@' \
 	  etc/makepkg.conf.in
 	./autogen.sh
 	./configure \

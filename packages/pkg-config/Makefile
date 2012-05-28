@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://pkgconfig.freedesktop.org/releases/$(FILE)
-MD5-$(FILE)= a3270bab3f4b69b7dc6dbdacbcae9745
+SHA256-$(FILE)= 3ba691ee2431f32ccb8efa131e59bf23e37f122dc66791309023ca6dcefcd10e
 
 include $(MY_ROOT)/scripts/functions.mk
 

@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://www.cpan.org/src/5.0/$(FILE)
-MD5-$(FILE)= 3306fbaf976dcebdcd49b2ac0be00eb9
+SHA256-$(FILE)= 6488359573bd7d41761bf935f66f827dc220fb3df961ef9b775d51fbd66548d3
 
 include $(MY_ROOT)/scripts/functions.mk
 

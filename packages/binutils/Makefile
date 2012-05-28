@@ -6,14 +6,14 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.bz2
 URL-$(FILE)= http://ftp.gnu.org/gnu/binutils/$(FILE)
-MD5-$(FILE)= ee0f10756c84979622b992a4a61ea3f5
+SHA256-$(FILE)= 6c7af8ed1c8cf9b4b9d6e6fe09a3e1d3d479fe63984ba8b9b26bf356b6313ca9
 
 include $(MY_ROOT)/scripts/functions.mk
 
-prebuild: $(FILE)
+stage0: $(FILE)
 	$(sep_dir_build)
 
-compile-prebuild:
+compile-stage0:
 	$(musl_prep)
 	../$(DIR)/configure \
 	--prefix=$(TT) \
@@ -70,4 +70,4 @@ clean:
 	-rm -rf $(DIR)
 	-rm -rf $(NM)-build
 
-.PHONY: compile-prebuild clean compile-stage1 compile-stage2
+.PHONY: compile-stage0 compile-stage1 compile-stage2 clean

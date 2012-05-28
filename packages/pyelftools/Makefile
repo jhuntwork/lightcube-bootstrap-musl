@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://pypi.python.org/packages/source/p/$(NM)/$(FILE)
-MD5-$(FILE)= 5ac7b279a01c41e5b022a1a382eb9d92
+SHA256-$(FILE)= d02e40a841a8cc38d78cdea8e497f601969e7270ebe00c7e671a3ce73f1cdf45
 
 include $(MY_ROOT)/scripts/functions.mk
 

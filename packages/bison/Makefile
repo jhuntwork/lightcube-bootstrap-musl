@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.bz2
 URL-$(FILE)= http://ftp.gnu.org/gnu/$(NM)/$(FILE)
-MD5-$(FILE)= 9dba20116b13fc61a0846b0058fbe004
+SHA256-$(FILE)= 0a370df6ee2b23e9ec3043e1ab78878241aa008ec424926294dd4cb3475439b8
 
 include $(MY_ROOT)/scripts/functions.mk
 
@@ -14,7 +14,7 @@ stage2: Makefile $(FILE)
 	$(std_build)
 
 compile-stage2:
-	sed -i 's/linux-gnu/linux-musl/g' `find . -name config.guess -o -name config.sub`
+	$(musl_prep)
 	# Mods to allow gnulib readahead et al to work
 	sed -i '/elif 0/s@0@defined SLOW_BUT_NO_HACKS@' lib/fseterr.c
 	CC="gcc -DSLOW_BUT_NO_HACKS" \

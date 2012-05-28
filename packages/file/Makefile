@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= ftp://ftp.astron.com/pub/$(NM)/$(FILE)
-MD5-$(FILE)= 16a407bd66d6c7a832f3a5c0d609c27b
+SHA256-$(FILE)= c70ae29a28c0585f541d5916fc3248c3e91baa481f63d7ccec53d1534cbcc9b7
 
 include $(MY_ROOT)/scripts/functions.mk
 

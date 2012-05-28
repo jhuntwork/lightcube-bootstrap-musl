@@ -5,8 +5,8 @@ VRS= 0.152
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.bz2
-URL-$(FILE)= $(HTTP)/$(NM)/$(FILE)
-MD5-$(FILE)= 39739ed58a0fa1862eff8735f111fe5c
+URL-$(FILE)= http://dev.lightcube.us/sources/$(NM)/$(FILE)
+SHA256-$(FILE)= 78798715adba95528cdf3fce33eca813131ee75b9109693d313b72f67d7fb4a6
 
 PATCH0= elfutils-portability.patch
 PATCH1= elfutils-add_ar.h.patch

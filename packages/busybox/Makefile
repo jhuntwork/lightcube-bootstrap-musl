@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.bz2
 URL-$(FILE)= http://busybox.net/downloads/$(FILE)
-MD5-$(FILE)= 9c0cae5a0379228e7b55e5b29528df8e
+SHA256-$(FILE)= 9b853406da61ffb59eb488495fe99cbb7fb3dd29a31307fcfa9cf070543710ee
 
 include $(MY_ROOT)/scripts/functions.mk
 

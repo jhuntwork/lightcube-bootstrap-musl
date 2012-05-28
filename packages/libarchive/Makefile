@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://cloud.github.com/downloads/libarchive/libarchive/$(FILE)
-MD5-$(FILE)= af443ca9a10ddbcbf00f7ae34ca7fc16
+SHA256-$(FILE)= d595f081bca83f8ee43a70732c2795205e1f8208e04822d33980993618fe8bcf
 
 include $(MY_ROOT)/scripts/functions.mk
 

@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.bz2
 URL-$(FILE)= http://python.org/ftp/python/$(VRS)/$(FILE)
-MD5-$(FILE)= cea34079aeb2e21e7b60ee82a0ac286b
+SHA256-$(FILE)= 5648ec81f93870fde2f0aa4ed45c8718692b15ce6fd9ed309bfb827ae12010aa
 
 include $(MY_ROOT)/scripts/functions.mk
 

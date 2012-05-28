@@ -1,5 +1,8 @@
-# Remote server location for packages
-export HTTP ?= http://dev.lightcube.us/sources
+# Build Order
+STAGE0= binutils gcc linux-headers
+STAGE1= musl binutils gcc busybox patch m4 make
+STAGE2_1= linux-headers musl zlib binutils gcc file ncurses util-linux pkg-config e2fsprogs busybox
+STAGE2_2= readline bash make patch m4 bison perl openssl curl libarchive python autoconf automake pacman libelf pyalpm pyelftools distribute namcap
 
 # Location for the temporary tools, must be a directory immediately under /
 export TT := /tools
@@ -56,8 +59,9 @@ endif
 export BUILD_ARCH := $(MY_ARCH)-custom-linux-musl
 export BUILD_TRUE := $(MY_ARCH)-unknown-linux-musl
 
+export pg := .progress
 
-all: test-host base package
+all: test-host $(pg) $(pg)/base package
 	@echo "All tasks completed successfully!"
 
 # Check host prerequisites
@@ -66,11 +70,14 @@ test-host:
 	@if [ "`whoami`" != "root" ] ; then \
 	 echo "You must be logged in as root." && exit 1 ; fi
 
+$(pg):
+	install -d $(pg)
+
 # Build the base system
-base: dirstruct builduser build
+$(pg)/base: $(pg)/dirstruct $(pg)/builduser build
 	@touch $@
 
-build: build-tools
+build: $(pg)/build-tools
 	@make mount
 	@chroot "$(MY_BUILD)" $(chenv-pre-sh) 'chown -R 0:0 $(SRC) $(MY_ROOT) && \
 	 cd $(MY_ROOT) && make pre-sh'
@@ -78,13 +85,12 @@ build: build-tools
 	 make post-sh'
 
 # Create the core directory structure
-dirstruct:
+$(pg)/dirstruct:
 	install -d $(MY_BASE)/logs $(MY_BUILD)$(SRC) $(MY_BUILD)$(TT)/bin
 	-ln -nsf $(MY_BUILD)$(TT) /
 	-ln -nsf $(MY_BUILD)$(SRC) /
 	-ln -nsf $(MY_BASE) /
 	install -m755 $(MY_ROOT)/scripts/unpack $(TT)/bin
-	install -m755 $(MY_ROOT)/scripts/teelog $(TT)/bin
 	install -d $(MY_BUILD)/bin $(MY_BUILD)/etc $(MY_BUILD)/lib $(MY_BUILD)/include $(MY_BUILD)/sbin $(MY_BUILD)/var
 	install -d -m 0750 $(MY_BUILD)/root
 	install -d -m 1777 $(MY_BUILD)/tmp $(MY_BUILD)/var/tmp
@@ -95,13 +101,13 @@ dirstruct:
 	@touch $@
 
 # Add the unprivileged user - will be used for building the temporary tools
-builduser:
+$(pg)/builduser:
 	@-groupadd $(USER)
 	@-useradd -s /bin/sh -g $(USER) -m -k /dev/null $(USER)
 	@-chown -R $(USER):$(USER) $(MY_BUILD)$(TT) $(MY_BUILD)$(SRC) $(MY_BASE)
 	@touch $@
 
-build-tools:
+$(pg)/build-tools:
 	@$(SUCMD) $(USER) -c "$(toolsenv) '$(toolssh) && make tools'"
 	@install -dv $(TT)/etc
 	@cp /etc/resolv.conf $(TT)/etc
@@ -112,19 +118,13 @@ build-tools:
 	@chmod u+s $(TT)/bin/busybox
 	@touch $@
 
-tools: \
-	binutils-prebuild \
-	gcc-prebuild \
-	linux-headers-prebuild \
-	musl-stage1 \
-	binutils-stage1 \
-	gcc-stage1 \
-	busybox-stage1 \
-	patch-stage1 \
-	m4-stage1 \
-	make-stage1
+tools:
+	@for pkg in $(STAGE0) ; do make packages/$${pkg}/stage0 || exit; done
+	@for pkg in $(STAGE1) ; do make packages/$${pkg}/stage1 || exit; done
 
-mount: unmount prep-mount
+mount: $(pg)/mount
+
+$(pg)/mount: unmount $(pg)/prep-mount
 	@mount -t proc proc $(MY_BUILD)/proc
 	@mount -t sysfs sysfs $(MY_BUILD)/sys
 	@mount -t tmpfs shm $(MY_BUILD)/dev/shm
@@ -134,60 +134,31 @@ mount: unmount prep-mount
 	@ln -sf /proc/self/fd/2 $(MY_BUILD)/dev/stderr
 	@touch $@
 
-prep-mount:
+$(pg)/prep-mount:
 	install -d $(MY_BUILD)/proc $(MY_BUILD)/sys $(MY_BUILD)/dev
-	$(TT)/bin/mknod -m 600 $(MY_BUILD)/dev/console c 5 1
-	$(TT)/bin/mknod -m 666 $(MY_BUILD)/dev/null c 1 3
-	$(TT)/bin/mknod -m 660 $(MY_BUILD)/dev/zero c 1 5
-	$(TT)/bin/mknod -m 444 $(MY_BUILD)/dev/random c 1 8
-	$(TT)/bin/mknod -m 444 $(MY_BUILD)/dev/urandom c 1 9
+	mknod -m 600 $(MY_BUILD)/dev/console c 5 1
+	mknod -m 666 $(MY_BUILD)/dev/null c 1 3
+	mknod -m 660 $(MY_BUILD)/dev/zero c 1 5
+	mknod -m 444 $(MY_BUILD)/dev/random c 1 8
+	mknod -m 444 $(MY_BUILD)/dev/urandom c 1 9
 	install -d $(MY_BUILD)/dev/pts $(MY_BUILD)/dev/shm
 	@touch $@
 
-pre-sh: \
-	createfiles \
-	linux-headers-stage2 \
-	musl-stage2 \
-	zlib-stage2 \
-	binutils-stage2 \
-	gcc-stage2 \
-	file-stage2 \
-	ncurses-stage2 \
-	util-linux-stage2 \
-	pkg-config-stage2 \
-	e2fsprogs-stage2 \
-	busybox-stage2
+pre-sh: $(pg)/createfiles
+	@for pkg in $(STAGE2_1) ; do make packages/$${pkg}/stage2 || exit; done
 
-createfiles:
+$(pg)/createfiles:
 	-for dir in /bin /etc /lib ; do install -dv $$dir ; done
 	@-$(TT)/bin/ln -s $(TT)/bin/sh /bin
 	@-$(TT)/bin/ln -s $(TT)/bin/cat /bin
 	@-$(TT)/bin/ln -s $(TT)/bin/pwd /bin
 	@-$(TT)/bin/ln -s $(TT)/bin/stty /bin
 	@cp $(TT)/etc/resolv.conf /etc
-	@touch /etc/mtab
+	@ln -s /proc/mounts /etc/mtab
 	@touch $@
 
-post-sh: \
-	readline-stage2 \
-	bash-stage2 \
-	make-stage2 \
-	patch-stage2 \
-	m4-stage2 \
-	bison-stage2 \
-	perl-stage2 \
-	openssl-stage2 \
-	curl-stage2 \
-	libarchive-stage2 \
-	python-stage2 \
-	autoconf-stage2 \
-	automake-stage2 \
-	pacman-stage2 \
-	libelf-stage2 \
-	pyalpm-stage2 \
-	pyelftools-stage2 \
-	distribute-stage2 \
-	namcap-stage2
+post-sh:
+	@for pkg in $(STAGE2_2) ; do make packages/$${pkg}/stage2 || exit; done
 
 package: unmount
 	@echo "Packaging build environment..."
@@ -200,63 +171,41 @@ package: unmount
 
 remove-tools:
 	install -m755 $(MY_ROOT)/scripts/unpack /bin
-	install -m755 $(MY_ROOT)/scripts/teelog /bin
 	rm -rf $(TT)
 
 unmount:
-	@-umount $(MY_BUILD)/dev/shm
-	@-umount $(MY_BUILD)/dev/pts
-	@-umount $(MY_BUILD)/proc
-	@-umount $(MY_BUILD)/sys
-	@-rm -f $(MY_BASE)/mount
+	@-umount $(MY_BUILD)/dev/shm 2>/dev/null
+	@-umount $(MY_BUILD)/dev/pts 2>/dev/null
+	@-umount $(MY_BUILD)/proc 2>/dev/null
+	@-umount $(MY_BUILD)/sys 2>/dev/null
+	@-rm -f $(MY_BASE)/mount 2>/dev/null
 
 stop:
 	@echo $(GREEN)Stopping due to user specified stop point.$(WHITE)
 	@exit 1
 
-%-only-prebuild: builduser
-	@su - $(USER) -c "$(toolsenv) '$(toolssh) && make $*-prebuild'"
-
-%-only-stage1: builduser
-	@su - $(USER) -c "$(toolsenv) '$(toolssh) && make $*-stage1'"
-
-%-only-stage1-32bit: builduser
-	@su - $(USER) -c "$(toolsenv) '$(toolssh) && make $*-stage1-32bit'"
-
-%-only-stage2: $(MKTREE)
-	make -C packages/$* stage2
-
-%-only-stage2-32bit: $(MKTREE)
-	make -C packages/$* stage2-32bit
-
-# Clean the build directory of a single package.
-%-clean:
+%clean:
 	make -C packages/$* clean
 
-%-prebuild: %-clean
-	hash -r && make -C packages/$* prebuild
-
-%-stage1: %-clean
-	hash -r && make -C packages/$* stage1
-
-%-stage1-32bit: %-clean
-	hash -r && make -C packages/$* stage1-32bit
-
-%-stage2: %-clean
-	make -C packages/$* stage2
-
-%-stage2-32bit: %-clean
-	make -C packages/$* stage2-32bit
+%stage0:
+	make -C $* clean
+	hash -r && make -C $* stage0
+%stage1:
+	make -C $* clean
+	hash -r && make -C $* stage1
+%stage2:
+	make -C $* clean
+	hash -r && make -C $* stage2
 
 clean: unmount
-	@-userdel $(USER)
+	@-userdel -r $(USER)
 	@-groupdel $(USER)
-	@rm -rf /home/$(USER)
-	@rm -f dirstruct builduser build-tools base createfiles prep-mount tools
-	@-for i in `ls packages` ; do $(MAKE) -C packages/$$i clean ; done
+	@rm -f $(pg)/*
+	@for pkg in $(STAGE1); do make -C packages/$${pkg} clean ; done
+	@for pkg in $(STAGE2_1); do make -C packages/$${pkg} clean ; done
+	@for pkg in $(STAGE2_2); do make -C packages/$${pkg} clean ; done
 	@find packages -name "stage*" -exec rm -f \{} \;
 	@find packages -name "*.log" -exec rm -f \{} \;
-	@find packages -name "prebuil*" -exec rm -f \{} \;
 	@find packages -type l -exec rm -f \{} \;
 	@rm -rf $(MY_BUILD)$(TT) $(MY_BASE)/log*
 	@rm -f $(TT) $(SRC) $(MY_ROOT)
@@ -266,5 +215,4 @@ clean: unmount
 scrub: clean
 	@for i in `find $(MY_BUILD) -mindepth 1 -maxdepth 1`; do case "$$i" in $(MY_BASE)|$(MY_BUILD)$(SRC)) echo Keeping "$$i" ;; *) echo Removing "$$i" ; rm -rf "$$i" ;; esac ; done
 
-.PHONY: unmount clean final-environment %-stage2 %-prebuild %-stage1 %-stage1-32bit \
-	%-only-stage2 %-only-prebuild %-only-stage1 post-sh pre-sh
+.PHONY: unmount clean post-sh pre-sh

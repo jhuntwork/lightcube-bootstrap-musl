@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://projects.archlinux.org/namcap.git/snapshot/$(FILE)
-MD5-$(FILE)= 808eba48518bff8f30d480290da90c83
+SHA256-$(FILE)= b9bc5f85b9398bc359e9b34b311234ae8eca9f04df0e83c26e2c309f79e25a8e
 
 include $(MY_ROOT)/scripts/functions.mk
 

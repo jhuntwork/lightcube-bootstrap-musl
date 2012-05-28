@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.xz
 URL-$(FILE)= http://ftp.gnu.org/gnu/$(NM)/$(FILE)
-MD5-$(FILE)= 50f97f4159805e374639a73e2636f22e
+SHA256-$(FILE)= 64ebcec9f8ac5b2487125a86a7760d2591ac9e1d3dbd59489633f9de62a57684
 
 include $(MY_ROOT)/scripts/functions.mk
 

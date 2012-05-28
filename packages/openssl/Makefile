@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://www.openssl.org/source/$(FILE)
-MD5-$(FILE)= 134f168bc2a8333f19f81d684841710b
+SHA256-$(FILE)= cd231cd854179b4cfef82e0f8c0b42e52027d4efa7eefef02264da8b336f0fd2
 
 PATCH= $(DIR)-parallel-build.patch
 

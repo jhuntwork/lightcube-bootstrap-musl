@@ -6,14 +6,14 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.bz2
 URL-$(FILE)= http://ftp.gnu.org/gnu/gcc/$(DIR)/$(FILE)
-MD5-$(FILE)= d79f553e7916ea21c556329eacfeaa16
+SHA256-$(FILE)= afba845e2d38547a63bd3976e90245c81ea176786f9e6966339c6d3761f1133a
 
 include $(MY_ROOT)/scripts/functions.mk
 
-prebuild: $(FILE)
+stage0: $(FILE)
 	$(sep_dir_build)
 
-compile-prebuild:
+compile-stage0:
 	$(musl_prep)
 	cd ../$(DIR) ; for file in $$(find gcc/config/i386 -name linux64.h -o -name linux.h) ; do \
 	sed -i -e 's@/lib\(64\)\?\(32\)\?/ld@$(TT)&@g' \
@@ -132,4 +132,4 @@ clean:
 	-rm -rf $(DIR)
 	-rm -rf $(NM)-build
 
-.PHONY: compile-stage1 clean compile-prebuild compile-stage2
+.PHONY: compile-stage1 compile-stage0 compile-stage2 clean

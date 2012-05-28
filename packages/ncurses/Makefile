@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://ftp.gnu.org/gnu/$(NM)/$(FILE)
-MD5-$(FILE)= 8cb9c412e5f2d96bc6f459aa8c6282a1
+SHA256-$(FILE)= 9046298fb440324c9d4135ecea7879ffed8546dd1b58e59430ea07a4633f563b
 
 FILE1= ncurses-fallback.c
 

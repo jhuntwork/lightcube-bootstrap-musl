@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.bz2
 URL-$(FILE)= http://curl.haxx.se/download/$(FILE)
-MD5-$(FILE)= f0303d47d9d3e6e4f08c2863c6504823
+SHA256-$(FILE)= cfb29139dfeb2449bf8a89963c3aed7d87f034013f05564cc0330b435c90b491
 
 include $(MY_ROOT)/scripts/functions.mk
 

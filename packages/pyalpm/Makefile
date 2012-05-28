@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://projects.archlinux.org/users/remy/pyalpm.git/snapshot/$(FILE)
-MD5-$(FILE)= 8004236b63c7fdc6c8fa5d99a071a8b3
+SHA256-$(FILE)= 6c9cee38579ff9f5ff6da883511f22af307fec161179de273ee924a9090a70f4
 
 include $(MY_ROOT)/scripts/functions.mk
 

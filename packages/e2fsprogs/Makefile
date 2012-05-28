@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://prdownloads.sourceforge.net/$(NM)/$(FILE)
-MD5-$(FILE)= 04f4561a54ad0419248316a00c016baa
+SHA256-$(FILE)= 420cf3d6e659665d1842d41d6d1a046bfe1f442dddf32dc7722f02a2bed9f470
 
 include $(MY_ROOT)/scripts/functions.mk
 
