@@ -11,7 +11,7 @@ export SRC := /sources
 export USER := builduser
 
 # Compiler optimizations
-export CFLAGS := -D_GNU_SOURCE -Os
+export CFLAGS := -D_GNU_SOURCE -O2 -pipe -fomit-frame-pointer -fno-asynchronous-unwind-tables
 export PM := -j$(shell grep processor /proc/cpuinfo | wc -l)
 #export PM := -j1
 
@@ -32,6 +32,12 @@ export MY_BUILD := $(shell dirname $(MY_BASE))
 export MY_ROOT := /$(shell basename $(MY_BASE))
 
 # Environment Variables
+ifeq ($(shell su --help 2>&1 | grep -q "session\-command"; echo $$?),0)
+export SUCMD := su --session-command
+else
+export SUCMD := su -c
+endif
+
 export toolsenv := env -i HOME=/home/$(USER) LC_ALL=POSIX PATH=$(TT)/bin:/bin:/usr/bin /bin/sh -c
 export toolssh := umask 022 && cd $(MY_ROOT)
 
@@ -96,11 +102,12 @@ builduser:
 	@touch $@
 
 build-tools:
-	@su - $(USER) -c "$(toolsenv) '$(toolssh) && make tools'"
+	@$(SUCMD) $(USER) -c "$(toolsenv) '$(toolssh) && make tools'"
 	@install -dv $(TT)/etc
 	@cp /etc/resolv.conf $(TT)/etc
 	@rm -rf $(TT)/share/man $(TT)/share/info $(TT)/info $(TT)/man    
 	@-ln -s $(TT)/bin/sh $(MY_BUILD)/bin/sh
+	@-ln -s $(TT)/bin/bash $(MY_BUILD)/bin/bash
 	@chown 0:0 $(TT)/bin/busybox
 	@chmod u+s $(TT)/bin/busybox
 	@touch $@
@@ -115,8 +122,7 @@ tools: \
 	busybox-stage1 \
 	patch-stage1 \
 	m4-stage1 \
-	make-stage1 \
-	perl-stage1
+	make-stage1
 
 mount: unmount prep-mount
 	@mount -t proc proc $(MY_BUILD)/proc
@@ -135,15 +141,6 @@ prep-mount:
 	$(TT)/bin/mknod -m 660 $(MY_BUILD)/dev/zero c 1 5
 	$(TT)/bin/mknod -m 444 $(MY_BUILD)/dev/random c 1 8
 	$(TT)/bin/mknod -m 444 $(MY_BUILD)/dev/urandom c 1 9
-	$(TT)/bin/mknod -m 660 $(MY_BUILD)/dev/loop0 b 7 0
-	$(TT)/bin/mknod -m 660 $(MY_BUILD)/dev/loop1 b 7 1
-	$(TT)/bin/mknod -m 660 $(MY_BUILD)/dev/loop2 b 7 2
-	$(TT)/bin/mknod -m 660 $(MY_BUILD)/dev/loop3 b 7 3
-	$(TT)/bin/mknod -m 660 $(MY_BUILD)/dev/loop4 b 7 4
-	$(TT)/bin/mknod -m 660 $(MY_BUILD)/dev/loop5 b 7 5
-	$(TT)/bin/mknod -m 660 $(MY_BUILD)/dev/loop6 b 7 6
-	$(TT)/bin/mknod -m 660 $(MY_BUILD)/dev/loop7 b 7 7
-	chown 0:8 $(MY_BUILD)/dev/loop*
 	install -d $(MY_BUILD)/dev/pts $(MY_BUILD)/dev/shm
 	@touch $@
 
@@ -154,6 +151,11 @@ pre-sh: \
 	zlib-stage2 \
 	binutils-stage2 \
 	gcc-stage2 \
+	file-stage2 \
+	ncurses-stage2 \
+	util-linux-stage2 \
+	pkg-config-stage2 \
+	e2fsprogs-stage2 \
 	busybox-stage2
 
 createfiles:
@@ -162,20 +164,30 @@ createfiles:
 	@-$(TT)/bin/ln -s $(TT)/bin/cat /bin
 	@-$(TT)/bin/ln -s $(TT)/bin/pwd /bin
 	@-$(TT)/bin/ln -s $(TT)/bin/stty /bin
-	@-$(TT)/bin/ln -s $(TT)/bin/perl /bin
 	@cp $(TT)/etc/resolv.conf /etc
 	@touch /etc/mtab
 	@touch $@
 
 post-sh: \
+	readline-stage2 \
+	bash-stage2 \
 	make-stage2 \
 	patch-stage2 \
 	m4-stage2 \
 	bison-stage2 \
 	perl-stage2 \
-	file-stage2 \
+	openssl-stage2 \
+	curl-stage2 \
 	libarchive-stage2 \
+	python-stage2 \
+	autoconf-stage2 \
+	automake-stage2 \
 	pacman-stage2 \
+	libelf-stage2 \
+	pyalpm-stage2 \
+	pyelftools-stage2 \
+	distribute-stage2 \
+	namcap-stage2
 
 package: unmount
 	@echo "Packaging build environment..."
@@ -252,9 +264,7 @@ clean: unmount
 	@rm -f packages/wget/ftpget
 
 scrub: clean
-	@rm -rf $(MY_BUILD)/bin $(MY_BUILD)/boot $(MY_BUILD)/etc $(MY_BUILD)/dev $(MY_BUILD)/home $(MY_BUILD)/lib \
-$(MY_BUILD)/lib64 $(MY_BUILD)/media $(MY_BUILD)/mnt $(MY_BUILD)/opt $(MY_BUILD)/proc $(MY_BUILD)/root $(MY_BUILD)/sbin \
-$(MY_BUILD)/srv $(MY_BUILD)/sys $(MY_BUILD)/tmp $(MY_BUILD)/var
+	@for i in `find $(MY_BUILD) -mindepth 1 -maxdepth 1`; do case "$$i" in $(MY_BASE)|$(MY_BUILD)$(SRC)) echo Keeping "$$i" ;; *) echo Removing "$$i" ; rm -rf "$$i" ;; esac ; done
 
 .PHONY: unmount clean final-environment %-stage2 %-prebuild %-stage1 %-stage1-32bit \
 	%-only-stage2 %-only-prebuild %-only-stage1 post-sh pre-sh

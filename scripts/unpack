@@ -14,10 +14,10 @@ the topmost (root) level of the package will be printed.
 get_top_dir() {
 	case $1 in
 		*zcat)
-			top_dir=$($1 $file | tar -tf - | head -n2 | awk '{if ((FNR % 2) == 0) {print $1}}' | sed 's@/.*@@')
+			top_dir=$($1 $file | $TAR -tf - | head -n2 | awk '{if ((FNR % 2) == 0) {print $1}}' | sed 's@/.*@@')
 			;;
 		tar)
-			top_dir=$($1 -tf $file | head -n2 | awk '{if ((FNR % 2) == 0) {print $1}}' | sed 's@/.*@@')
+			top_dir=$($TAR -tf $file | head -n2 | awk '{if ((FNR % 2) == 0) {print $1}}' | sed 's@/.*@@')
 			;;
 	esac
     if [ ${r} = 1 ]
@@ -55,25 +55,32 @@ else
     fi
 fi
 
-tar_version=$(tar --version 2>/dev/null | head -n1 | awk '{print $NF}')
-tar_major=$(echo $tar_version | awk -F. '{print $1}')
-tar_minor=$(echo $tar_version | awk -F. '{print $2}')
 ext=$(echo $1 | awk -F. '{print $NF}')
-
-if [ "${tar_major}x" = "1x" ]
+if type -p bsdtar >/dev/null
 then
-	if [ $tar_minor -lt 15 ]
-	then
-		pipe=true
-	else
-		pipe=false
-	fi
-elif tar --version 2>&1 | grep -q BusyBox
-then
-	pipe=false
+	TAR=bsdtar;
+	pipe=false;
 else
-	echo "Unsupported version of tar: $tar_version"
-	exit 1
+	TAR=tar
+	tar_version=$(tar --version 2>/dev/null | head -n1 | awk '{print $NF}')
+	tar_major=$(echo $tar_version | awk -F. '{print $1}')
+	tar_minor=$(echo $tar_version | awk -F. '{print $2}')
+
+	if [ "${tar_major}x" = "1x" ]
+	then
+		if [ $tar_minor -lt 15 ]
+		then
+			pipe=true
+		else
+			pipe=false
+		fi
+	elif tar --version 2>&1 | grep -q BusyBox
+	then
+		pipe=false
+	else
+		echo "Unsupported version of tar: $tar_version"
+		exit 1
+	fi
 fi
 
 if [ $pipe ]
@@ -82,24 +89,24 @@ then
 		bz2|BZ2)
 			get_top_dir bzcat
 			rm -rf $top_dir
-			bzcat $file | tar -x${v}f - 2>/dev/null
+			bzcat $file | $TAR -x${v}f - 2>/dev/null
 			;;
 		tgz|gz|GZ)
 			get_top_dir zcat
 			rm -rf $top_dir
-			zcat $file | tar -x${v}f - 2>/dev/null
+			zcat $file | $TAR -x${v}f - 2>/dev/null
 			;;
 		xz|tar|TAR)
 			get_top_dir tar
 			rm -rf $top_dir
-			tar -x${v}f $file 2>/dev/null
+			$TAR -x${v}f $file 2>/dev/null
 			;;
 		*)
 	esac	
 else
 	get_top_dir tar
 	rm -rf $top_dir
-	tar -x${v}f $file 2>/dev/null
+	$TAR -x${v}f $file 2>/dev/null
 fi
 
 echo $top_dir

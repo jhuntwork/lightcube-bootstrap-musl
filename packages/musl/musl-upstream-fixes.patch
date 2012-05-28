@@ -1,0 +1,243 @@
+diff -Naur -x '.gi*' musl-0.9.0/include/string.h musl/include/string.h
+--- musl-0.9.0/include/string.h	2012-05-06 21:23:19.000000000 +0000
++++ musl/include/string.h	2012-05-10 14:51:28.647072181 +0000
+@@ -85,8 +85,10 @@
+ char *strsep(char **, const char *);
+ void *memrchr(const void *, int, size_t);
+ void *mempcpy(void *, const void *, size_t);
++#ifndef __cplusplus
+ char *basename();
+ #endif
++#endif
+ 
+ #ifdef __cplusplus
+ }
+diff -Naur -x '.gi*' musl-0.9.0/include/sys/param.h musl/include/sys/param.h
+--- musl-0.9.0/include/sys/param.h	2012-05-06 21:23:19.000000000 +0000
++++ musl/include/sys/param.h	2012-05-10 19:56:13.037103264 +0000
+@@ -18,7 +18,7 @@
+ #define MIN(a,b) (((a)<(b))?(a):(b))
+ #define MAX(a,b) (((a)>(b))?(a):(b))
+ 
+-#define ___bitop(x,i,o) ((a)[(i)/8] o 1<<(i)%8)
++#define __bitop(x,i,o) ((x)[(i)/8] o (1<<(i)%8))
+ #define setbit(x,i) __bitop(x,i,|=)
+ #define clrbit(x,i) __bitop(x,i,&=~)
+ #define isset(x,i) __bitop(x,i,&)
+diff -Naur -x '.gi*' musl-0.9.0/src/linux/vhangup.c musl/src/linux/vhangup.c
+--- musl-0.9.0/src/linux/vhangup.c	1970-01-01 00:00:00.000000000 +0000
++++ musl/src/linux/vhangup.c	2012-05-10 19:57:48.852152437 +0000
+@@ -0,0 +1,8 @@
++#define _GNU_SOURCE
++#include <unistd.h>
++#include "syscall.h"
++
++int vhangup(void)
++{
++	return syscall(SYS_vhangup);
++}
+diff -Naur -x '.gi*' musl-0.9.0/src/math/i386/llrintf.s musl/src/math/i386/llrintf.s
+--- musl-0.9.0/src/math/i386/llrintf.s	2012-05-06 21:23:19.000000000 +0000
++++ musl/src/math/i386/llrintf.s	2012-05-10 14:51:28.668072233 +0000
+@@ -3,7 +3,7 @@
+ llrintf:
+ 	sub $8,%esp
+ 	flds 12(%esp)
+-	fistpq (%esp)
++	fistpll (%esp)
+ 	pop %eax
+ 	pop %edx
+ 	ret
+diff -Naur -x '.gi*' musl-0.9.0/src/math/i386/llrintl.s musl/src/math/i386/llrintl.s
+--- musl-0.9.0/src/math/i386/llrintl.s	2012-05-06 21:23:19.000000000 +0000
++++ musl/src/math/i386/llrintl.s	2012-05-10 14:51:28.668072233 +0000
+@@ -2,7 +2,7 @@
+ .type llrintl,@function
+ llrintl:
+ 	fldt 4(%esp)
+-	fistpq 4(%esp)
++	fistpll 4(%esp)
+ 	mov 4(%esp),%eax
+ 	mov 8(%esp),%edx
+ 	ret
+diff -Naur -x '.gi*' musl-0.9.0/src/math/i386/llrint.s musl/src/math/i386/llrint.s
+--- musl-0.9.0/src/math/i386/llrint.s	2012-05-06 21:23:19.000000000 +0000
++++ musl/src/math/i386/llrint.s	2012-05-10 14:51:28.668072233 +0000
+@@ -2,7 +2,7 @@
+ .type llrint,@function
+ llrint:
+ 	fldl 4(%esp)
+-	fistpq 4(%esp)
++	fistpll 4(%esp)
+ 	mov 4(%esp),%eax
+ 	mov 8(%esp),%edx
+ 	ret
+diff -Naur -x '.gi*' musl-0.9.0/src/regex/regcomp.c musl/src/regex/regcomp.c
+--- musl-0.9.0/src/regex/regcomp.c	2012-05-06 21:23:19.000000000 +0000
++++ musl/src/regex/regcomp.c	2012-05-10 14:51:28.683072264 +0000
+@@ -961,6 +961,8 @@
+   tre_stack_t *stack = ctx->stack;
+   int bottom = tre_stack_num_objects(stack);
+   int depth = 0;
++  wchar_t wc;
++  int clen;
+ 
+   if (!ctx->nofirstsub)
+     {
+@@ -1147,18 +1149,13 @@
+ 	     an empty set of `()', a bracket expression, `.', `^', `$',
+ 	     a `\' followed by a character, or a single character. */
+ 
+-	  /* End of regexp? (empty string). */
+-	  if (!*ctx->re)
+-	    goto parse_literal;
+-
+ 	  switch (*ctx->re)
+ 	    {
+ 	    case CHAR_LPAREN:  /* parenthesized subexpression */
+ 
+-	      if (ctx->cflags & REG_EXTENDED
+-		  || (ctx->re > ctx->re_start
+-		      && *(ctx->re - 1) == CHAR_BACKSLASH))
++	      if (ctx->cflags & REG_EXTENDED)
+ 		{
++		lparen:
+ 		  depth++;
+ 		    {
+ 		      ctx->re++;
+@@ -1174,25 +1171,6 @@
+ 		goto parse_literal;
+ 	      break;
+ 
+-	    case CHAR_RPAREN:  /* end of current subexpression */
+-	      if ((ctx->cflags & REG_EXTENDED && depth > 0)
+-		  || (ctx->re > ctx->re_start
+-		      && *(ctx->re - 1) == CHAR_BACKSLASH))
+-		{
+-		  /* We were expecting an atom, but instead the current
+-		     subexpression was closed.	POSIX leaves the meaning of
+-		     this to be implementation-defined.	 We interpret this as
+-		     an empty expression (which matches an empty string).  */
+-		  result = tre_ast_new_literal(ctx->mem, EMPTY, -1, -1);
+-		  if (result == NULL)
+-		    return REG_ESPACE;
+-		  if (!(ctx->cflags & REG_EXTENDED))
+-		    ctx->re--;
+-		}
+-	      else
+-		goto parse_literal;
+-	      break;
+-
+ 	    case CHAR_LBRACKET: /* bracket expression */
+ 	      ctx->re++;
+ 	      status = tre_parse_bracket(ctx, &result);
+@@ -1203,13 +1181,14 @@
+ 	    case CHAR_BACKSLASH:
+ 	      /* If this is "\(" or "\)" chew off the backslash and
+ 		 try again. */
+-	      if (!(ctx->cflags & REG_EXTENDED)
+-		  && (*(ctx->re + 1) == CHAR_LPAREN
+-		      || *(ctx->re + 1) == CHAR_RPAREN))
++	      if (!(ctx->cflags & REG_EXTENDED) && *(ctx->re + 1) == CHAR_LPAREN)
+ 		{
+ 		  ctx->re++;
+-		  STACK_PUSHX(stack, int, PARSE_ATOM);
+-		  break;
++		  goto lparen;
++		}
++	      if (!(ctx->cflags & REG_EXTENDED) && *(ctx->re + 1) == CHAR_RPAREN)
++		{
++		  goto empty_atom;
+ 		}
+ 
+ 	      /* If a macro is used, parse the expanded macro recursively. */
+@@ -1231,7 +1210,7 @@
+ 		  }
+ 	      }
+ 
+-	      if (!*ctx->re)
++	      if (!ctx->re[1])
+ 		/* Trailing backslash. */
+ 		return REG_EESCAPE;
+ 
+@@ -1369,12 +1348,9 @@
+ 	      break;
+ 
+ 	    case CHAR_CARET:	 /* beginning of line assertion */
+-	      /* '^' has a special meaning everywhere in EREs, and in the
+-		 beginning of the RE and after \( is BREs. */
++	      /* '^' has a special meaning everywhere in EREs, and at
++		 beginning of BRE. */
+ 	      if (ctx->cflags & REG_EXTENDED
+-		  || (ctx->re - 2 >= ctx->re_start
+-		      && *(ctx->re - 2) == CHAR_BACKSLASH
+-		      && *(ctx->re - 1) == CHAR_LPAREN)
+ 		  || ctx->re == ctx->re_start)
+ 		{
+ 		  result = tre_ast_new_literal(ctx->mem, ASSERTION,
+@@ -1389,10 +1365,8 @@
+ 
+ 	    case CHAR_DOLLAR:	 /* end of line assertion. */
+ 	      /* '$' is special everywhere in EREs, and in the end of the
+-		 string and before \) is BREs. */
++		 string in BREs. */
+ 	      if (ctx->cflags & REG_EXTENDED
+-		  || (*(ctx->re + 1) == CHAR_BACKSLASH
+-		      && *(ctx->re + 2) == CHAR_RPAREN)
+ 		  || !*(ctx->re + 1))
+ 		{
+ 		  result = tre_ast_new_literal(ctx->mem, ASSERTION,
+@@ -1405,34 +1379,28 @@
+ 		goto parse_literal;
+ 	      break;
+ 
++	    case CHAR_RPAREN:
++	      if (!depth)
++	        goto parse_literal;
++	    case CHAR_STAR:
++	    case CHAR_PIPE:
++	    case CHAR_LBRACE:
++	    case CHAR_PLUS:
++	    case CHAR_QUESTIONMARK:
++	      if (!(ctx->cflags & REG_EXTENDED))
++	        goto parse_literal;
++
++	    case 0:
++	    empty_atom:
++	      result = tre_ast_new_literal(ctx->mem, EMPTY, -1, -1);
++	      if (!result)
++		return REG_ESPACE;
++	      break;
++
+ 	    default:
+ 	    parse_literal:
+ 
+-	      /* We are expecting an atom.  If the subexpression (or the whole
+-		 regexp ends here, we interpret it as an empty expression
+-		 (which matches an empty string).  */
+-	      if (
+-		  (!*ctx->re
+-		   || *ctx->re == CHAR_STAR
+-		   || (ctx->cflags & REG_EXTENDED
+-		       && (*ctx->re == CHAR_PIPE
+-			   || *ctx->re == CHAR_LBRACE
+-			   || *ctx->re == CHAR_PLUS
+-			   || *ctx->re == CHAR_QUESTIONMARK))
+-		   /* Test for "\)" in BRE mode. */
+-		   || (!(ctx->cflags & REG_EXTENDED)
+-		       && !*(ctx->re + 1)
+-		       && *ctx->re == CHAR_BACKSLASH
+-		       && *(ctx->re + 1) == CHAR_LBRACE)))
+-		{
+-		  result = tre_ast_new_literal(ctx->mem, EMPTY, -1, -1);
+-		  if (!result)
+-		    return REG_ESPACE;
+-		  break;
+-		}
+-
+-	      wchar_t wc;
+-	      int clen = mbtowc(&wc, ctx->re, -1);
++	      clen = mbtowc(&wc, ctx->re, -1);
+ 	      if (clen<0) clen=1, wc=WEOF;
+ 
+ 	      /* Note that we can't use an tre_isalpha() test here, since there

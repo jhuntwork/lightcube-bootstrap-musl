@@ -14,7 +14,7 @@ stage1: $(FILE)
 	$(std_build)
 
 compile-stage1:
-	sed -i 's/linux-gnu/linux-musl/g' `find . -name config.guess -o -name config.sub`
+	$(musl_prep)
 	# Mods to allow gnulib readahead et al to work
 	sed -i '/abort/d' lib/freadahead.c
 	CC="gcc -DSLOW_BUT_NO_HACKS" \
@@ -26,7 +26,7 @@ stage2: Makefile $(FILE)
 	$(std_build)
 
 compile-stage2:
-	sed -i 's/linux-gnu/linux-musl/g' `find . -name config.guess -o -name config.sub`
+	$(musl_prep)
 	# Mods to allow gnulib readahead et al to work
 	sed -i '/abort/d' lib/freadahead.c
 	CC="gcc -DSLOW_BUT_NO_HACKS" \

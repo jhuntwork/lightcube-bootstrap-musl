@@ -96,6 +96,8 @@ compile-stage1:
 stage2: Makefile $(FILE)
 	$(sep_dir_build)
 
+CFLAGS += -fPIC
+
 compile-stage2:
 	$(musl_prep)
 	cd ../$(DIR) ; for file in $$(find gcc/config/i386 -name linux64.h -o -name linux.h) ; \
@@ -112,17 +114,14 @@ compile-stage2:
 	../$(DIR)/configure \
 	--prefix='' \
 	--libexecdir=/lib \
-	--disable-shared \
-	--disable-libgomp \
-	--disable-libssp \
-	--disable-libmudflap \
 	--enable-languages=c,c++ \
-	--disable-bootstrap \
+	--enable-threads=posix \
+	--disable-tls \
 	--with-system-zlib \
-	--disable-multilib \
-	--with-mpfr-include=`pwd`/../$(DIR)/mpfr/src \
-	--with-mpfr-lib=`pwd`/mpfr/src/.libs
-	make $(PM) BOOT_LDFLAGS="-static" LDFLAGS="-static"
+	--disable-bootstrap \
+	--disable-libmudflap \
+	--disable-multilib
+	make $(PM)
 	make install
 	ln -sf ../bin/cpp /lib
 	ln -sf gcc /bin/cc

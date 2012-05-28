@@ -27,7 +27,7 @@ compile-prebuild:
 	--disable-werror
 	echo "MAKEINFO = :" >> Makefile
 	make $(PM)
-	make install
+	make install-gas install-ld install-binutils
 
 stage1: $(FILE)
 	$(sep_dir_build)
@@ -44,7 +44,7 @@ compile-stage1:
 	--disable-shared \
 	--with-lib-path=$(TT)/lib
 	make $(PM)
-	make install
+	make install-gas install-ld install-binutils
 	make -C ld clean
 	make -C ld LIB_PATH=/lib $(PM)
 	cp -v ld/ld-new $(TT)/bin
@@ -64,8 +64,7 @@ compile-stage2:
 	--disable-shared \
 	--libdir=/lib
 	make $(PM)
-	make install
-	cp ../$(DIR)/include/libiberty.h /include
+	make install-gas install-ld install-binutils
 
 clean:
 	-rm -rf $(DIR)

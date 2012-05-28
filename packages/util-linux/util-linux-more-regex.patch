@@ -1,0 +1,59 @@
+--- text-utils/more.c	2010-06-24 14:10:24.120304100 -0500
++++ text-utils/more.c	2010-06-24 05:57:40.283349300 -0500
+@@ -58,9 +58,7 @@
+ #include "nls.h"
+ #include "widechar.h"
+ 
+-#define _REGEX_RE_COMP
+ #include <regex.h>
+-#undef _REGEX_RE_COMP
+ 
+ #define VI		"vi"	/* found on the user's path */
+ 
+@@ -106,6 +104,7 @@ void prbuf (register char *s, register i
+ void execute (char *filename, char *cmd, ...);
+ FILE *checkf (char *, int *);
+ void prepare_line_buffer(void);
++regex_t re;
+ 
+ #define TBUFSIZ	1024
+ #define LINSIZ	256	/* minimal Line buffer size */
+@@ -1553,20 +1552,25 @@ void search(char buf[], FILE *file, regi
+     register long line3 = startline;
+     register int lncount;
+     int saveln, rv;
+-    char *s;
++    char s[64];
++    int si;
+ 
+     context.line = saveln = Currline;
+     context.chrctr = startline;
+     lncount = 0;
+-    if ((s = re_comp (buf)) != 0)
++    if (buf && strlen(buf) > 0) {
++    if (si = regcomp (&re, buf, REG_NOSUB) != 0) {
++	regerror (si, &re, s, sizeof s);
+ 	error (s);
++    }
++    }
+     while (!feof (file)) {
+ 	line3 = line2;
+ 	line2 = line1;
+ 	line1 = Ftell (file);
+ 	rdline (file);
+ 	lncount++;
+-	if ((rv = re_exec (Line)) == 1) {
++	if ((rv = regexec (&re, Line, 0, NULL, 0)) == 0) {
+ 		if (--n == 0) {
+ 		    if (lncount > 3 || (lncount > 1 && no_intty))
+ 		    {
+@@ -1601,7 +1605,7 @@ void search(char buf[], FILE *file, regi
+ 		    }
+ 		    break;
+ 		}
+-	} else if (rv == -1)
++	} else if (rv != REG_NOMATCH)
+ 	    error (_("Regular expression botch"));
+     }
+     if (feof (file)) {
+

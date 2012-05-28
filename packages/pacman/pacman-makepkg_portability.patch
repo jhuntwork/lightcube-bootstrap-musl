@@ -1,0 +1,142 @@
+From 0c18408b7161042a64a5f6eea21556d30c8a34e7 Mon Sep 17 00:00:00 2001
+From: Jeremy Huntwork <jhuntwork@lightcubesolutions.com>
+Date: Tue, 22 May 2012 05:41:41 +0000
+Subject: [PATCH] Portability fixes for makepkg
+
+Allow makepkg to work correctly when used with find from busybox.
+Update to last submitted patch to use basename value of file path for symlinks.
+
+Signed-off-by: Jeremy Huntwork <jhuntwork@lightcubesolutions.com>
+---
+ configure.ac          |    5 +++++
+ scripts/Makefile.am   |    1 +
+ scripts/makepkg.sh.in |   47 ++++++++++++++++++-----------------------------
+ 3 files changed, 24 insertions(+), 29 deletions(-)
+
+diff --git a/configure.ac b/configure.ac
+index 15e93e7..5483ee1 100644
+--- a/configure.ac
++++ b/configure.ac
+@@ -287,6 +287,7 @@ GCC_VISIBILITY_CC
+ GCC_GNU89_INLINE_CC
+ 
+ # Host-dependant definitions
++INODECMD="stat -c '%i %n'"
+ SIZECMD="stat -c %s"
+ SEDINPLACE="sed -i"
+ STRIP_BINARIES="--strip-all"
+@@ -294,6 +295,7 @@ STRIP_SHARED="--strip-unneeded"
+ STRIP_STATIC="--strip-debug"
+ case "${host_os}" in
+ 	*bsd*)
++		INODECMD="stat -f '%i %n'"
+ 		SIZECMD="stat -f %z"
+ 		SEDINPLACE="sed -i \"\""
+ 		;;
+@@ -303,6 +305,7 @@ case "${host_os}" in
+ 		;;
+ 	darwin*)
+ 		host_os_darwin=yes
++		INODECMD="/usr/bin/stat -f '%i %n'"
+ 		SIZECMD="/usr/bin/stat -f %z"
+ 		SEDINPLACE="/usr/bin/sed -i ''"
+ 		STRIP_BINARIES=""
+@@ -314,6 +317,7 @@ esac
+ AM_CONDITIONAL([CYGWIN], test "x$host_os_cygwin" = "xyes")
+ AM_CONDITIONAL([DARWIN], test "x$host_os_darwin" = "xyes")
+ AC_PATH_PROGS([DUPATH], [du], [du], [/usr/bin$PATH_SEPARATOR/bin] )
++AC_SUBST(INODECMD)
+ AC_SUBST(SIZECMD)
+ AC_SUBST(SEDINPLACE)
+ AC_SUBST(STRIP_BINARIES)
+@@ -487,6 +491,7 @@ ${PACKAGE_NAME}:
+ 
+     Architecture           : ${CARCH}
+     Host Type              : ${CHOST}
++    File inode command     : ${INODECMD}
+     Filesize command       : ${SIZECMD}
+     In-place sed command   : ${SEDINPLACE}
+ 
+diff --git a/scripts/Makefile.am b/scripts/Makefile.am
+index ae36624..4747074 100644
+--- a/scripts/Makefile.am
++++ b/scripts/Makefile.am
+@@ -49,6 +49,7 @@ edit = sed \
+ 	-e 's|@PACKAGE_BUGREPORT[@]|$(PACKAGE_BUGREPORT)|g' \
+ 	-e 's|@PACKAGE_NAME[@]|$(PACKAGE_NAME)|g' \
+ 	-e 's|@BUILDSCRIPT[@]|$(BUILDSCRIPT)|g' \
++	-e "s|@INODECMD[@]|$(INODECMD)|g" \
+ 	-e 's|@SIZECMD[@]|$(SIZECMD)|g' \
+ 	-e 's|@SEDINPLACE[@]|$(SEDINPLACE)|g' \
+ 	-e 's|@DUPATH[@]|$(DUPATH)|g' \
+diff --git a/scripts/makepkg.sh.in b/scripts/makepkg.sh.in
+index 718b4e9..a73fcf3 100644
+--- a/scripts/makepkg.sh.in
++++ b/scripts/makepkg.sh.in
+@@ -1057,37 +1057,26 @@ tidy_install() {
+ 
+ 	if check_option "zipman" "y" && [[ -n ${MAN_DIRS[*]} ]]; then
+ 		msg2 "$(gettext "Compressing man and info pages...")"
+-		local manpage ext file link hardlinks hl
+-		find ${MAN_DIRS[@]} -type f 2>/dev/null |
+-		while read manpage ; do
+-			ext="${manpage##*.}"
+-			file="${manpage##*/}"
+-			if [[ $ext != gz && $ext != bz2 ]]; then
+-				# update symlinks to this manpage
+-				find ${MAN_DIRS[@]} -lname "$file" 2>/dev/null |
+-				while read link ; do
++		local file files inode link
++		while read -rd ' ' inode; do
++			read file
++			find ${MAN_DIRS[@]} -type l 2>/dev/null |
++			while read link ; do
++				if [[ "${file}" -ef "${link}" ]] ; then
+ 					rm -f "$link" "${link}.gz"
+-					ln -s -- "${file}.gz" "${link}.gz"
+-				done
+-
+-				# check file still exists (potentially already compressed due to hardlink)
+-				if [[ -f ${manpage} ]]; then
+-					# find hard links and remove them
+-					#   the '|| true' part keeps the script from bailing on the EOF returned
+-					#   by read at the end of the find output
+-					mapfile -t hardlinks < \
+-						<(find ${MAN_DIRS[@]} ! -name "$file" -samefile "$manpage" 2>/dev/null)
+-					rm -f "${hardlinks[@]}"
+-					# compress the original
+-					gzip -9 "$manpage"
+-					# recreate hard links removed earlier
+-					for hl in "${hardlinks[@]}"; do
+-						ln "${manpage}.gz" "${hl}.gz"
+-						chmod 644 ${hl}.gz
+-					done
++					ln -s -- "${file##*/}.gz" "${link}.gz"
+ 				fi
++			done
++			if [[ -z ${files[$inode]} ]]; then
++				files[$inode]=$file
++				gzip -9 -f "$file"
++			else
++				rm -f "$file"
++				ln "${files[$inode]}.gz" "${file}.gz"
++				chmod 644 "${file}.gz"
+ 			fi
+-		done
++		done < <(find ${MAN_DIRS[@]} -type f \! -name "*.gz" \! -name "*.bz2" \
++			-exec @INODECMD@ '{}' + 2>/dev/null)
+ 	fi
+ 
+ 	if check_option "strip" "y"; then
+@@ -1115,7 +1104,7 @@ tidy_install() {
+ 
+ 	if check_option "emptydirs" "n"; then
+ 		msg2 "$(gettext "Removing empty directories...")"
+-		find . -depth -type d -empty -delete
++		find . -mindepth 1 -depth -type d -exec rmdir '{}' + 2>/dev/null
+ 	fi
+ 
+ 	if check_option "upx" "y"; then
+-- 
+1.7.1
+

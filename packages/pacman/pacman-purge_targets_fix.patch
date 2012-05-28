@@ -1,0 +1,27 @@
+From ec34eec1fb0bceeb1c2d0f9cf3a771132c89a9af Mon Sep 17 00:00:00 2001
+From: Jeremy Huntwork <jhuntwork@lightcubesolutions.com>
+Date: Mon, 28 May 2012 16:11:01 +0000
+Subject: [PATCH 2/2] Allow wildcards in PURGE_TARGETS to match any type of file except
+ for directories.
+
+Signed-off-by: Jeremy Huntwork <jhuntwork@lightcubesolutions.com>
+---
+ scripts/makepkg.sh.in |    2 +-
+ 1 files changed, 1 insertions(+), 1 deletions(-)
+
+diff --git a/scripts/makepkg.sh.in b/scripts/makepkg.sh.in
+index b0918ae..eb239e3 100644
+--- a/scripts/makepkg.sh.in
++++ b/scripts/makepkg.sh.in
+@@ -1048,7 +1048,7 @@ tidy_install() {
+ 		local pt
+ 		for pt in "${PURGE_TARGETS[@]}"; do
+ 			if [[ ${pt} = "${pt//\/}" ]]; then
+-				find . -type f -name "${pt}" -exec rm -f -- '{}' \;
++				find . ! -type d -name "${pt}" -exec rm -f -- '{}' \;
+ 			else
+ 				rm -f ${pt}
+ 			fi
+-- 
+1.7.1
+

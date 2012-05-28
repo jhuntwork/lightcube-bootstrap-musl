@@ -1,14 +1,14 @@
 # musl Makefile
 
 NM= musl
-VRS= 0.8.9
+VRS= 0.9.0
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://www.etalabs.net/musl/releases/$(FILE)
-MD5-$(FILE)= 1dfb3ba92ec08073bb982efc60b058cb
+MD5-$(FILE)= 6ee1442f40c183c4dd37e63c5c0841aa
 
-FILE1= config-x86_64
+PATCH= musl-upstream-fixes.patch
 
 include $(MY_ROOT)/scripts/functions.mk
 
@@ -16,33 +16,46 @@ stage1: $(FILE)
 	$(std_build)
 
 compile-stage1:
-	install ../$(FILE1) config.mak
-	sed -i '/prefix/s@=.*@= $(TT)@' config.mak
-	sed -i '/syslibdir/s@=.*@= $(TT)/lib@' config.mak
-	make CC=$(BUILD_ARCH)-gcc CROSS_COMPILE=$(BUILD_ARCH)- libdir=$(TT)/lib $(PM)
-	make CC=$(BUILD_ARCH)-gcc CROSS_COMPILE=$(BUILD_ARCH)- libdir=$(TT)/lib install
+	patch -Np1 -i ../$(PATCH)
+	sed -i 's@SYS_utime@&s@' src/linux/utimes.c
+	# -O3 boosts performance of some features, such as regex
+	sed -i 's@-Os@-O3@g' configure
+	CFLAGS="" CC=$(BUILD_ARCH)-gcc \
+	./configure \
+	  --prefix=$(TT) \
+	  --syslibdir=$(TT)/lib
+	# -ffloat-store contributes significantly to size of libc.a
+	sed -i 's@-ffloat-store@@' config.mak
+	make CROSS_COMPILE=$(BUILD_ARCH)- libdir=$(TT)/lib $(PM)
+	make CROSS_COMPILE=$(BUILD_ARCH)- libdir=$(TT)/lib install
 	echo 'main(){}' | $(BUILD_ARCH)-gcc -x c - -v -lrt -Wl,--verbose
 	readelf -l a.out | grep $(TT)
-	rm -vf a.out
 
 stage2: $(FILE)
 	$(std_build)
 
 compile-stage2:
-	install ../$(FILE1) config.mak
-	make CC=gcc $(PM)
+	patch -Np1 -i ../$(PATCH)
+	sed -i 's@SYS_utime@&s@' src/linux/utimes.c
+	# -O3 boosts performance of some features, such as regex
+	sed -i 's@-Os@-O3@g' configure
+	CFLAGS="" ./configure \
+	  --prefix=/
+	# -ffloat-store contributes significantly to size of libc.a
+	sed -i 's@-ffloat-store@@' config.mak
+	make $(PM)
 	make install
 	mv $(TT)/bin/ld $(TT)/bin/ld-old
 	mv $(TT)/$$(gcc -dumpmachine)/bin/ld $(TT)/$$(gcc -dumpmachine)/bin/ld-old
 	mv $(TT)/bin/ld-new $(TT)/bin/ld
 	ln -s $(TT)/bin/ld $(TT)/$$(gcc -dumpmachine)/bin/ld
 	gcc -dumpspecs | sed \
-	-e 's@$(TT)@@g' \
-	-e '/^\*cpp:$$/{n;s,$$, -isystem /include,}' \
-	-e '/\*startfile_prefix_spec:/{n;s@.*@/lib/ @}' \
-	> `dirname $$(gcc --print-libgcc-file-name)`/specs
+	 -e 's@$(TT)@@g' \
+	 -e '/^\*cpp:$$/{n;s,$$, -isystem /include,}' \
+	 -e '/\*startfile_prefix_spec:/{n;s@.*@/lib/ @}' \
+	 > `dirname $$(gcc --print-libgcc-file-name)`/specs
 	echo 'main(){}' | cc -x c - -v -lrt -Wl,--verbose
-	rm -f a.out
+	readelf -l a.out | grep "interpreter: /lib/"
 
 clean:
 	-rm -rf $(DIR)

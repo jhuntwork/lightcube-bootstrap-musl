@@ -1,12 +1,12 @@
-# libarchive Makefile
+# pkg-config Makefile
 
-NM= libarchive
-VRS= 3.0.4
+NM= pkg-config
+VRS= 0.25
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
-URL-$(FILE)= http://cloud.github.com/downloads/libarchive/libarchive/$(FILE)
-MD5-$(FILE)= af443ca9a10ddbcbf00f7ae34ca7fc16
+URL-$(FILE)= http://pkgconfig.freedesktop.org/releases/$(FILE)
+MD5-$(FILE)= a3270bab3f4b69b7dc6dbdacbcae9745
 
 include $(MY_ROOT)/scripts/functions.mk
 
@@ -15,7 +15,9 @@ stage2: Makefile $(FILE)
 
 compile-stage2:
 	$(musl_prep)
-	./configure --prefix=/
+	./configure \
+          --prefix='' \
+	  --with-pc-path=/lib/pkgconfig
 	make $(PM)
 	make install
 
