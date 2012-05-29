@@ -2,15 +2,15 @@ define setup_build
 	@touch $(DIR)-$@.log
 	@-ln -sf ../packages/$(shell basename $(CURDIR))/$(DIR)-$@.log $(MY_ROOT)/logs/ 
 	@>$(DIR)-$@.log
-	@unpack $(FILE) 2>&1 | tee $(DIR)-$@.log >>$(MY_ROOT)/logs/build.log
+	@(unpack $(FILE) 2>&1 ; echo $$?) | teelog $(DIR)-$@.log >>$(MY_ROOT)/logs/build.log
 endef
 
 define clean_build
-	@make clean 2>&1 | tee $(DIR)-$@.log >>$(MY_ROOT)/logs/build.log
+	@(make clean 2>&1 ; echo $$?) | teelog $(DIR)-$@.log >>$(MY_ROOT)/logs/build.log
 endef
 
 define compile
-	@make -C $(1) -f ../Makefile compile-$@ 2>&1 | tee $(DIR)-$@.log >>$(MY_ROOT)/logs/build.log
+	@(make -C $(1) -f ../Makefile compile-$@ 2>&1 ; echo $$?) | teelog $(DIR)-$@.log >>$(MY_ROOT)/logs/build.log
 endef
 
 define std_build

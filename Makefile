@@ -1,8 +1,10 @@
 # Build Order
 STAGE0= binutils gcc linux-headers
 STAGE1= musl binutils gcc busybox patch m4 make
-STAGE2_1= linux-headers musl zlib binutils gcc file ncurses util-linux pkg-config e2fsprogs busybox
-STAGE2_2= readline bash make patch m4 bison perl openssl curl libarchive python autoconf automake pacman libelf pyalpm pyelftools distribute namcap
+STAGE2_1= linux-headers musl zlib binutils gcc file ncurses busybox util-linux
+STAGE2_2= util-linux pkg-config e2fsprogs readline bash make patch m4 bison \
+perl openssl curl libarchive python autoconf automake pacman libelf pyalpm \
+pyelftools distribute namcap
 
 # Location for the temporary tools, must be a directory immediately under /
 export TT := /tools
@@ -14,7 +16,7 @@ export SRC := /sources
 export USER := builduser
 
 # Compiler optimizations
-export CFLAGS := -D_GNU_SOURCE -O2 -pipe -fomit-frame-pointer -fno-asynchronous-unwind-tables
+export CFLAGS := -D_GNU_SOURCE -O2 -pipe -fomit-frame-pointer -fno-asynchronous-unwind-tables -Werror-implicit-function-declaration
 export PM := -j$(shell grep processor /proc/cpuinfo | wc -l)
 #export PM := -j1
 
@@ -91,6 +93,7 @@ $(pg)/dirstruct:
 	-ln -nsf $(MY_BUILD)$(SRC) /
 	-ln -nsf $(MY_BASE) /
 	install -m755 $(MY_ROOT)/scripts/unpack $(TT)/bin
+	install -m755 $(MY_ROOT)/scripts/teelog $(TT)/bin
 	install -d $(MY_BUILD)/bin $(MY_BUILD)/etc $(MY_BUILD)/lib $(MY_BUILD)/include $(MY_BUILD)/sbin $(MY_BUILD)/var
 	install -d -m 0750 $(MY_BUILD)/root
 	install -d -m 1777 $(MY_BUILD)/tmp $(MY_BUILD)/var/tmp
@@ -136,11 +139,11 @@ $(pg)/mount: unmount $(pg)/prep-mount
 
 $(pg)/prep-mount:
 	install -d $(MY_BUILD)/proc $(MY_BUILD)/sys $(MY_BUILD)/dev
-	mknod -m 600 $(MY_BUILD)/dev/console c 5 1
-	mknod -m 666 $(MY_BUILD)/dev/null c 1 3
-	mknod -m 660 $(MY_BUILD)/dev/zero c 1 5
-	mknod -m 444 $(MY_BUILD)/dev/random c 1 8
-	mknod -m 444 $(MY_BUILD)/dev/urandom c 1 9
+	-mknod -m 600 $(MY_BUILD)/dev/console c 5 1
+	-mknod -m 666 $(MY_BUILD)/dev/null c 1 3
+	-mknod -m 660 $(MY_BUILD)/dev/zero c 1 5
+	-mknod -m 444 $(MY_BUILD)/dev/random c 1 8
+	-mknod -m 444 $(MY_BUILD)/dev/urandom c 1 9
 	install -d $(MY_BUILD)/dev/pts $(MY_BUILD)/dev/shm
 	@touch $@
 
@@ -169,16 +172,12 @@ package: unmount
 	  --exclude=$(shell basename $(TT)) \
 	  --exclude=lost+found * 
 
-remove-tools:
-	install -m755 $(MY_ROOT)/scripts/unpack /bin
-	rm -rf $(TT)
-
 unmount:
-	@-umount $(MY_BUILD)/dev/shm 2>/dev/null
-	@-umount $(MY_BUILD)/dev/pts 2>/dev/null
-	@-umount $(MY_BUILD)/proc 2>/dev/null
-	@-umount $(MY_BUILD)/sys 2>/dev/null
-	@-rm -f $(MY_BASE)/mount 2>/dev/null
+	@-umount $(MY_BUILD)/dev/shm
+	@-umount $(MY_BUILD)/dev/pts
+	@-umount $(MY_BUILD)/proc
+	@-umount $(MY_BUILD)/sys
+	@-rm -f $(MY_BASE)/mount
 
 stop:
 	@echo $(GREEN)Stopping due to user specified stop point.$(WHITE)
@@ -201,9 +200,9 @@ clean: unmount
 	@-userdel -r $(USER)
 	@-groupdel $(USER)
 	@rm -f $(pg)/*
-	@for pkg in $(STAGE1); do make -C packages/$${pkg} clean ; done
-	@for pkg in $(STAGE2_1); do make -C packages/$${pkg} clean ; done
-	@for pkg in $(STAGE2_2); do make -C packages/$${pkg} clean ; done
+	@-for pkg in $(STAGE1); do make -C packages/$${pkg} clean ; done
+	@-for pkg in $(STAGE2_1); do make -C packages/$${pkg} clean ; done
+	@-for pkg in $(STAGE2_2); do make -C packages/$${pkg} clean ; done
 	@find packages -name "stage*" -exec rm -f \{} \;
 	@find packages -name "*.log" -exec rm -f \{} \;
 	@find packages -type l -exec rm -f \{} \;
