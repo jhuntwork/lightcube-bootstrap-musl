@@ -1,12 +1,12 @@
 # curl Makefile
 
 NM= curl
-VRS= 7.25.0
+VRS= 7.28.0
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.bz2
 URL-$(FILE)= http://curl.haxx.se/download/$(FILE)
-SHA256-$(FILE)= cfb29139dfeb2449bf8a89963c3aed7d87f034013f05564cc0330b435c90b491
+SHA256-$(FILE)= b7f510db60f520ba0bc8a39cccee7e913362205b4a7709e16af2cba14093099b
 
 include $(MY_ROOT)/scripts/functions.mk
 
