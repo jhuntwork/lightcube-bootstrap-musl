@@ -1,14 +1,12 @@
 # musl Makefile
 
 NM= musl
-VRS= 0.9.0
+VRS= 0.9.6
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://www.etalabs.net/musl/releases/$(FILE)
-SHA256-$(FILE)= 8d2e452dd15c550688d24058126b3b167d2de9e69fc05d0964fd493b150c7429
-
-PATCH= musl-upstream-fixes.patch
+SHA256-$(FILE)= c447b239ae1bbcd6750a077c1170a92e7a5ea19cc327c3cf5b821f1b677ca208
 
 include $(MY_ROOT)/scripts/functions.mk
 
@@ -16,8 +14,6 @@ stage1: $(FILE)
 	$(std_build)
 
 compile-stage1:
-	patch -Np1 -i ../$(PATCH)
-	sed -i 's@SYS_utime@&s@' src/linux/utimes.c
 	# -O3 boosts performance of some features, such as regex
 	sed -i 's@-Os@-O3@g' configure
 	CFLAGS="" CC=$(BUILD_ARCH)-gcc \
@@ -35,8 +31,6 @@ stage2: $(FILE)
 	$(std_build)
 
 compile-stage2:
-	patch -Np1 -i ../$(PATCH)
-	sed -i 's@SYS_utime@&s@' src/linux/utimes.c
 	# -O3 boosts performance of some features, such as regex
 	sed -i 's@-Os@-O3@g' configure
 	CFLAGS="" ./configure \
