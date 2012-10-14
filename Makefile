@@ -49,8 +49,8 @@ endif
 export toolsenv := env -i HOME=/home/$(USER) LC_ALL=POSIX PATH=$(TT)/bin:/bin:/usr/bin /bin/sh -c
 export toolssh := umask 022 && cd $(MY_ROOT)
 
-export chenv-pre-sh := $(TT)/bin/env -i LC_ALL=POSIX HOME=/root TERM=$(TERM) PS1='\u:\w\$$ ' PATH=/bin:/sbin:$(TT)/bin sh -c
-export chenv-post-sh := /bin/env -i HOME=/root TERM=$(TERM) PS1='\u:\w\$$ ' PATH=/bin:/sbin:$(TT)/bin sh -c
+export chenv-pre-sh := $(TT)/bin/env -i LC_ALL=POSIX HOME=/root TERM=$(TERM) PATH=/bin:/sbin:$(TT)/bin sh -c
+export chenv-post-sh := /bin/env -i HOME=/root TERM=$(TERM) PATH=/bin:/sbin:$(TT)/bin sh -c
 
 # Architecture specifics
 ifeq ($(MY_ARCH),i686)
