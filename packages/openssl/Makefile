@@ -1,14 +1,14 @@
 # openssl Makefile
 
 NM= openssl
-VRS= 1.0.1
+VRS= 1.0.1c
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://www.openssl.org/source/$(FILE)
-SHA256-$(FILE)= cd231cd854179b4cfef82e0f8c0b42e52027d4efa7eefef02264da8b336f0fd2
+SHA256-$(FILE)= 2a9eb3cd4e8b114eb9179c0d3884d61658e7d8e8bf4984798a5f5bd48e325ebe
 
-PATCH= $(DIR)-parallel-build.patch
+PATCH= $(NM)-parallel-build.patch
 
 include $(MY_ROOT)/scripts/functions.mk
 
