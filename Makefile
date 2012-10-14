@@ -1,10 +1,13 @@
 # Build Order
 STAGE0= binutils gcc linux-headers
-STAGE1= musl binutils gcc busybox patch m4 make
-STAGE2_1= linux-headers musl zlib binutils gcc file ncurses busybox util-linux
-STAGE2_2= util-linux pkg-config e2fsprogs readline bash make patch m4 bison \
-perl openssl curl libarchive python autoconf automake pacman libelf pyalpm \
-pyelftools distribute namcap
+STAGE1= musl binutils gcc busybox patch make
+STAGE2_1= linux-headers musl zlib binutils gcc file ncurses busybox
+STAGE2_2= readline bash make patch perl openssl curl libarchive \
+pkg-config m4 autoconf automake pacman
+# NOTE: m4, autoconf and automake can be removed when upgrading
+# to a released version of pacman
+# The following are additional packages for extending functionality in pacman:
+# python libelf pyalpm pyelftools distribute namcap
 
 # Location for the temporary tools, must be a directory immediately under /
 export TT := /tools
@@ -16,7 +19,7 @@ export SRC := /sources
 export USER := builduser
 
 # Compiler optimizations
-export CFLAGS := -D_GNU_SOURCE -O2 -pipe -fomit-frame-pointer -fno-asynchronous-unwind-tables -Werror-implicit-function-declaration
+export CFLAGS := -D_GNU_SOURCE -O2 -pipe -fomit-frame-pointer -fno-asynchronous-unwind-tables
 export PM := -j$(shell grep processor /proc/cpuinfo | wc -l)
 #export PM := -j1
 
@@ -179,8 +182,8 @@ unmount:
 	@-umount $(MY_BUILD)/sys
 	@-rm -f $(MY_BASE)/mount
 
-stop:
-	@echo $(GREEN)Stopping due to user specified stop point.$(WHITE)
+packages/stop/%:
+	@echo Stopping due to user specified stop point.
 	@exit 1
 
 %clean:
