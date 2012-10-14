@@ -17,7 +17,7 @@ compile-stage2:
 	# Busybox doesn't support mktemp -u
 	sed -i 's@mktemp -u@mktemp@' Makefile.in
 	./configure --prefix=''
-	make
+	make $(PM)
 	make install
 
 clean:
