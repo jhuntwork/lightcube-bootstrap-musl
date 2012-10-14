@@ -1,12 +1,12 @@
 # busybox Makefile
 
 NM= busybox
-VRS= 1.19.4
+VRS= 1.20.2
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.bz2
 URL-$(FILE)= http://busybox.net/downloads/$(FILE)
-SHA256-$(FILE)= 9b853406da61ffb59eb488495fe99cbb7fb3dd29a31307fcfa9cf070543710ee
+SHA256-$(FILE)= eb13ff01dae5618ead2ef6f92ba879e9e0390f9583bd545d8789d27cf39b6882
 
 include $(MY_ROOT)/scripts/functions.mk
 
