@@ -1,34 +1,14 @@
 # Perl Makefile
 
 NM= perl
-VRS= 5.14.2
+VRS= 5.16.1
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://www.cpan.org/src/5.0/$(FILE)
-SHA256-$(FILE)= 6488359573bd7d41761bf935f66f827dc220fb3df961ef9b775d51fbd66548d3
+SHA256-$(FILE)= 759a2479587024fa64685e04dbfb4ef07461aef3aff932a34d0c1435d4fa1d97
 
 include $(MY_ROOT)/scripts/functions.mk
-
-stage1: $(FILE)
-	$(std_build)
-
-compile-stage1:
-	chmod 777 hints/linux.sh
-	echo 'locincpth=""' >> hints/linux.sh
-	echo 'loclibpth=""' >> hints/linux.sh
-	echo 'glibpth="$(TT)/lib"' >> hints/linux.sh
-	echo 'usrinc="$(TT)/include"' >> hints/linux.sh
-	echo 'libc="$(TT)/lib/libc.so"' >> hints/linux.sh
-	./Configure -des -Accflags='-D_GNU_SOURCE' -Dprefix=$(TT)
-	make
-	cp -v perl cpan/podlators/pod2man $(TT)/bin
-	mkdir -p $(TT)/lib/perl5/$(VRS)
-	cp -R lib/* $(TT)/lib/perl5/$(VRS)
-
-chroot:
-	chroot "$(MP)" $(chenv-pre-bash) \
-	'cd $(MY_ROOT) && make ch-$(NM) $(chbash-pre-bash)'
 
 stage2: Makefile $(FILE)
 	$(std_build)
@@ -58,7 +38,7 @@ compile-stage2:
 	 -Dman3dir=/share/man/man3 \
 	 -Dpager="/bin/less -isR" \
 	 -Duseshrplib
-	make
+	make $(PM)
 	make install
 	cd ext/POSIX; perl Makefile.PL
 	cd ext/POSIX; make
@@ -67,4 +47,4 @@ compile-stage2:
 clean:
 	-rm -rf $(DIR)
 
-.PHONY: compile-stage1 clean chroot compile-stage2
+.PHONY: clean compile-stage2
