@@ -1,9 +1,9 @@
 # Build Order
 STAGE0= binutils gcc linux-headers
 STAGE1= musl binutils gcc busybox patch make
-STAGE2_1= linux-headers musl zlib binutils gcc file ncurses busybox
-STAGE2_2= readline bash make patch perl openssl curl libarchive \
-pkg-config m4 autoconf automake pacman
+STAGE2= linux-headers musl zlib binutils gcc file ncurses busybox readline \
+bash make patch perl openssl curl libarchive pkg-config m4 autoconf automake \
+pacman
 # NOTE: m4, autoconf and automake can be removed when upgrading
 # to a released version of pacman
 # The following are additional packages for extending functionality in pacman:
@@ -16,7 +16,7 @@ export TT := /tools
 export SRC := /sources
 
 # The name of the build user account to create and use for the temporary tools
-export USER := builduser
+export USER := lcbuilduser
 
 # Compiler optimizations
 export CFLAGS := -D_GNU_SOURCE -O2 -pipe -fomit-frame-pointer -fno-asynchronous-unwind-tables
@@ -46,11 +46,8 @@ else
 export SUCMD := su -c
 endif
 
-export toolsenv := env -i HOME=/home/$(USER) LC_ALL=POSIX PATH=$(TT)/bin:/bin:/usr/bin /bin/sh -c
-export toolssh := umask 022 && cd $(MY_ROOT)
-
-export chenv-pre-sh := $(TT)/bin/env -i LC_ALL=POSIX HOME=/root TERM=$(TERM) PATH=/bin:/sbin:$(TT)/bin sh -c
-export chenv-post-sh := /bin/env -i HOME=/root TERM=$(TERM) PATH=/bin:/sbin:$(TT)/bin sh -c
+export toolsenv := env -i LC_ALL=POSIX HOME=/home/$(USER) PATH=$(TT)/bin:/bin:/usr/bin /bin/sh -c
+export chenv := env -i LC_ALL=POSIX HOME=/root PATH=/bin:/sbin:$(TT)/bin sh -c
 
 # Architecture specifics
 ifeq ($(MY_ARCH),i686)
@@ -84,10 +81,8 @@ $(pg)/base: $(pg)/dirstruct $(pg)/builduser build
 
 build: $(pg)/build-tools
 	@make mount
-	@chroot "$(MY_BUILD)" $(chenv-pre-sh) 'chown -R 0:0 $(SRC) $(MY_ROOT) && \
-	 cd $(MY_ROOT) && make pre-sh'
-	@chroot "$(MY_BUILD)" $(chenv-post-sh) 'cd $(MY_ROOT) && \
-	 make post-sh'
+	@chroot "$(MY_BUILD)" $(chenv) 'chown -R 0:0 $(SRC) $(MY_ROOT) && \
+	 cd $(MY_ROOT) && make buildchroot'
 
 # Create the core directory structure
 $(pg)/dirstruct:
@@ -114,12 +109,13 @@ $(pg)/builduser:
 	@touch $@
 
 $(pg)/build-tools:
-	@$(SUCMD) $(USER) -c "$(toolsenv) '$(toolssh) && make tools'"
+	@$(SUCMD) $(USER) -c "$(toolsenv) 'umask 022 && cd $(MY_ROOT) && make tools'"
 	@install -dv $(TT)/etc
 	@cp /etc/resolv.conf $(TT)/etc
 	@rm -rf $(TT)/share/man $(TT)/share/info $(TT)/info $(TT)/man    
 	@-ln -s $(TT)/bin/sh $(MY_BUILD)/bin/sh
 	@-ln -s $(TT)/bin/bash $(MY_BUILD)/bin/bash
+	@-ln -s $(TT)/bin/env $(MY_BUILD)/bin/env
 	@chown 0:0 $(TT)/bin/busybox
 	@chmod u+s $(TT)/bin/busybox
 	@touch $@
@@ -150,8 +146,8 @@ $(pg)/prep-mount:
 	install -d $(MY_BUILD)/dev/pts $(MY_BUILD)/dev/shm
 	@touch $@
 
-pre-sh: $(pg)/createfiles
-	@for pkg in $(STAGE2_1) ; do make packages/$${pkg}/stage2 || exit; done
+buildchroot: $(pg)/createfiles
+	@for pkg in $(STAGE2) ; do make packages/$${pkg}/stage2 || exit; done
 
 $(pg)/createfiles:
 	-for dir in /bin /etc /lib ; do install -dv $$dir ; done
@@ -163,13 +159,10 @@ $(pg)/createfiles:
 	@ln -s /proc/mounts /etc/mtab
 	@touch $@
 
-post-sh:
-	@for pkg in $(STAGE2_2) ; do make packages/$${pkg}/stage2 || exit; done
-
 package: unmount
 	@echo "Packaging build environment..."
 	@cd $(MY_BUILD) && \
-	 tar -cjf $(MY_BASE)/buildenv-$(shell date +%Y%m%d).tar.bz2 \
+	 tar -cjf $(MY_BASE)/buildenv-$(shell date +%Y%m%d%H%M).tar.bz2 \
 	  --exclude=$(shell basename $(MY_BASE)) \
 	  --exclude=$(shell basename $(SRC)) \
 	  --exclude=$(shell basename $(TT)) \
@@ -204,17 +197,20 @@ clean: unmount
 	@-groupdel $(USER)
 	@rm -f $(pg)/*
 	@-for pkg in $(STAGE1); do make -C packages/$${pkg} clean ; done
-	@-for pkg in $(STAGE2_1); do make -C packages/$${pkg} clean ; done
-	@-for pkg in $(STAGE2_2); do make -C packages/$${pkg} clean ; done
+	@-for pkg in $(STAGE2); do make -C packages/$${pkg} clean ; done
 	@find packages -name "stage*" -exec rm -f \{} \;
 	@find packages -name "*.log" -exec rm -f \{} \;
 	@find packages -type l -exec rm -f \{} \;
 	@rm -rf $(MY_BUILD)$(TT) $(MY_BASE)/log*
 	@rm -f $(TT) $(SRC) $(MY_ROOT)
-	@# Special cases
-	@rm -f packages/wget/ftpget
 
 scrub: clean
-	@for i in `find $(MY_BUILD) -mindepth 1 -maxdepth 1`; do case "$$i" in $(MY_BASE)|$(MY_BUILD)$(SRC)) echo Keeping "$$i" ;; *) echo Removing "$$i" ; rm -rf "$$i" ;; esac ; done
+	@for i in `find $(MY_BUILD) -mindepth 1 -maxdepth 1`; \
+	 do \
+	  case "$$i" in \
+		$(MY_BASE)|$(MY_BUILD)$(SRC)) echo Keeping "$$i" ;; \
+		*) echo Removing "$$i" ; rm -rf "$$i" ;; \
+	  esac ; \
+	 done
 
-.PHONY: unmount clean post-sh pre-sh
+.PHONY: unmount clean buildchroot tools
