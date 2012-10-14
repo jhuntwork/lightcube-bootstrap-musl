@@ -6,7 +6,7 @@ DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://projects.archlinux.org/pacman.git/snapshot/$(FILE)
-SHA256-$(FILE)= a6911ecbde87891c05bcb0e962037eae635d339d5d61159b5ab8ed26bcdda852
+SHA256-$(FILE)= 08077ab4f63957a80f3de7229868d9ced07fe6ab8d551f83315f09749b415a94
 
 PATCH1= pacman-makepkg_portability.patch
 PATCH2= pacman-purge_targets_fix.patch
@@ -28,6 +28,7 @@ compile-stage2:
 	./autogen.sh
 	./configure \
 	 --prefix='' \
+	 --with-libcurl \
 	 --disable-doc
 	make V=1 $(PM)
 	make install
