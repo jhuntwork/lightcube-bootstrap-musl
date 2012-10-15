@@ -1,15 +1,12 @@
 # pacman Makefile
 
 NM= pacman
-VRS= 9a76a458b898ea462666491cb74cd95372462da4
+VRS= 4.0.3
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
-URL-$(FILE)= http://projects.archlinux.org/pacman.git/snapshot/$(FILE)
-SHA256-$(FILE)= 08077ab4f63957a80f3de7229868d9ced07fe6ab8d551f83315f09749b415a94
-
-PATCH1= pacman-makepkg_portability.patch
-PATCH2= pacman-purge_targets_fix.patch
+URL-$(FILE)= ftp://ftp.archlinux.org/other/pacman/$(FILE)
+SHA256-$(FILE)= a48696ae51aaccf31a69ea7916ba9b06e7836eb933b8a281c666729c9d55ce25
 
 include $(MY_ROOT)/scripts/functions.mk
 
@@ -18,14 +15,11 @@ stage2: Makefile $(FILE)
 
 compile-stage2:
 	$(musl_prep)
-	patch -Np1 -i ../$(PATCH1)
-	patch -Np1 -i ../$(PATCH2)
 	sed -i 's@usr/@@g' etc/makepkg.conf.in etc/pacman.conf.in
 	sed -i "/MAN_DIRS/s@(.*)@({,local/}{,share/},opt/*}/{man,info})@" etc/makepkg.conf.in
 	sed -i -e '/-O2 -pipe/s@^#@@' \
           -e '/-O2 -pipe/s@-O2 -pipe@$(CFLAGS)@' \
 	  etc/makepkg.conf.in
-	./autogen.sh
 	./configure \
 	 --prefix='' \
 	 --with-libcurl \

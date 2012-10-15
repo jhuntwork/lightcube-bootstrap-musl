@@ -2,10 +2,7 @@
 STAGE0= binutils gcc linux-headers
 STAGE1= musl binutils gcc busybox patch make
 STAGE2= linux-headers musl zlib binutils gcc file ncurses busybox readline \
-bash make patch perl openssl curl libarchive pkg-config m4 autoconf automake \
-pacman
-# NOTE: m4, autoconf and automake can be removed when upgrading
-# to a released version of pacman
+bash make patch perl openssl curl libarchive pkg-config pacman
 # The following are additional packages for extending functionality in pacman:
 # python libelf pyalpm pyelftools distribute namcap
 
