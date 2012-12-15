@@ -43,8 +43,3 @@ compile-stage2:
 	cd ext/POSIX; perl Makefile.PL
 	cd ext/POSIX; make
 	cd ext/POSIX; make install
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: clean compile-stage2

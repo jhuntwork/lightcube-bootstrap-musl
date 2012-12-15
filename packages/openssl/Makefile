@@ -29,8 +29,3 @@ compile-stage2:
 	make MANDIR=/share/man install
 	install -d /etc/ssl/certs
 	install -m 0644 ../ca-bundle.crt /etc/ssl/certs/
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: clean compile-stage2

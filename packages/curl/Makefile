@@ -21,8 +21,3 @@ compile-stage2:
 	  --with-ca-bundle=/etc/ssl/certs/ca-bundle.crt
 	make $(PM)
 	make install
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: clean compile-stage2

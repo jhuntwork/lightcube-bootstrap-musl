@@ -26,8 +26,3 @@ compile-stage2:
 	make install
 	install -m 0644 ../profile /etc/
 	install -m 0644 ../bashrc /etc/
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: clean compile-stage2

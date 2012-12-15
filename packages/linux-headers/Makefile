@@ -34,8 +34,3 @@ compile-stage2:
 	make mrproper
 	make INSTALL_HDR_PATH=dest HOSTCFLAGS="-D_GNU_SOURCE" headers_install
 	cp -rv dest/include/* /include
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: compile-stage0 compile-stage2 clean

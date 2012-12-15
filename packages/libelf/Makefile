@@ -31,8 +31,3 @@ compile-stage2:
 	find . -name Makefile -exec sed -i 's/-Werror//g' '{}' \;
 	make -C libelf $(PM)
 	make -C libelf install
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: clean compile-stage2

@@ -20,8 +20,3 @@ compile-stage2:
 	make $(PM)
 	make install
 	ln -sf python3 /bin/python
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: clean compile-stage2

@@ -20,8 +20,3 @@ compile-stage2:
 	  --with-pc-path=/lib/pkgconfig
 	make $(PM)
 	make install
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: clean compile-stage2

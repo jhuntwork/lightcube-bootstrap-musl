@@ -18,8 +18,3 @@ compile-stage2:
 	sed -i -e 's@--tmpdir@-t@' -e 's@XXXXXXXXXX@XXXXXX@' namcap
 	python setup.py build
 	python setup.py install
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: clean compile-stage2

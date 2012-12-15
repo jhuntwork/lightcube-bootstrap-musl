@@ -2,7 +2,8 @@
 STAGE0= binutils gcc linux-headers
 STAGE1= musl binutils gcc busybox patch make
 STAGE2= linux-headers musl zlib binutils gcc file ncurses busybox readline \
-bash make patch perl openssl curl libarchive pkg-config pacman
+bash make patch perl openssl curl libarchive pkg-config m4 autoconf automake \
+git pacman
 # The following are additional packages for extending functionality in pacman:
 # python libelf pyalpm pyelftools distribute namcap
 
@@ -17,7 +18,7 @@ export USER := lcbuilduser
 
 # Compiler optimizations
 export CFLAGS := -D_GNU_SOURCE -O2 -pipe -fomit-frame-pointer -fno-asynchronous-unwind-tables
-export PM := -j$(shell grep processor /proc/cpuinfo | wc -l)
+export PM := -j$(shell grep -c processor /proc/cpuinfo)
 #export PM := -j1
 
 # Set the base architecture
@@ -58,19 +59,31 @@ endif
 export BUILD_ARCH := $(MY_ARCH)-custom-linux-musl
 export BUILD_TRUE := $(MY_ARCH)-unknown-linux-musl
 
+# Misc.
 export pg := .progress
 
+export GREEN  = \033[0;32m
+export RED    = \033[0;31m
+export CYAN   = \033[0;36m
+export NORMAL = \033[00m
+export ERROR  = printf " ${RED}***${NORMAL} %s\n"
+export OK     = printf " ${GREEN}***${NORMAL} %s\n"
+export INFO   = printf " ${CYAN}***${NORMAL} %s\n"
+
+export ERROR_MOUNT = $(ERROR) "Failed to unmount all virtual file systems. Check the output of mount and umount and manually unmount any subdirectories of $(MY_BUILD)"
+
+# Targets
 all: test-host $(pg) $(pg)/base package
-	@echo "All tasks completed successfully!"
+	@$(OK) "All tasks completed successfully!"
 
 # Check host prerequisites
 # FIXME: Fill this out with more package pre-reqs
 test-host:
 	@if [ "`whoami`" != "root" ] ; then \
-	 echo "You must be logged in as root." && exit 1 ; fi
+	 $(ERROR) "You must be logged in as root." && exit 1 ; fi
 
 $(pg):
-	install -d $(pg)
+	@install -d $(pg)
 
 # Build the base system
 $(pg)/base: $(pg)/dirstruct $(pg)/builduser build
@@ -83,19 +96,21 @@ build: $(pg)/build-tools
 
 # Create the core directory structure
 $(pg)/dirstruct:
-	install -d $(MY_BASE)/logs $(MY_BUILD)$(SRC) $(MY_BUILD)$(TT)/bin
-	-ln -nsf $(MY_BUILD)$(TT) /
-	-ln -nsf $(MY_BUILD)$(SRC) /
-	-ln -nsf $(MY_BASE) /
-	install -m755 $(MY_ROOT)/scripts/unpack $(TT)/bin
-	install -m755 $(MY_ROOT)/scripts/teelog $(TT)/bin
-	install -d $(MY_BUILD)/bin $(MY_BUILD)/etc $(MY_BUILD)/lib $(MY_BUILD)/include $(MY_BUILD)/sbin $(MY_BUILD)/var
-	install -d -m 0750 $(MY_BUILD)/root
-	install -d -m 1777 $(MY_BUILD)/tmp $(MY_BUILD)/var/tmp
-	install -d $(MY_BUILD)/var/lock $(MY_BUILD)/var/log $(MY_BUILD)/var/run $(MY_BUILD)/var/spool
-	cp $(MY_ROOT)/etc/passwd $(MY_BUILD)/etc
-	cp $(MY_ROOT)/etc/group $(MY_BUILD)/etc
-	echo "127.0.0.1 localhost $(shell hostname)" >$(MY_BUILD)/etc/hosts
+	@$(INFO) "Preparing the environment..."
+	@install -d $(MY_BASE)/logs $(MY_BUILD)$(SRC) $(MY_BUILD)$(TT)/bin
+	@-ln -nsf $(MY_BUILD)$(TT) /
+	@-ln -nsf $(MY_BUILD)$(SRC) /
+	@-ln -nsf $(MY_BASE) /
+	@install -m755 $(MY_ROOT)/scripts/unpack $(TT)/bin
+	@install -m755 $(MY_ROOT)/scripts/teelog $(TT)/bin
+	@install -d $(MY_BUILD)/bin $(MY_BUILD)/etc $(MY_BUILD)/lib $(MY_BUILD)/include $(MY_BUILD)/sbin $(MY_BUILD)/var
+	@install -d -m 0750 $(MY_BUILD)/root
+	@install -d -m 1777 $(MY_BUILD)/tmp $(MY_BUILD)/var/tmp
+	@install -d $(MY_BUILD)/var/lock $(MY_BUILD)/var/log $(MY_BUILD)/var/run $(MY_BUILD)/var/spool
+	@cp $(MY_ROOT)/etc/passwd $(MY_BUILD)/etc
+	@cp $(MY_ROOT)/etc/group $(MY_BUILD)/etc
+	@echo "127.0.0.1 localhost $(shell hostname)" >$(MY_BUILD)/etc/hosts
+	@$(OK) "Environment ready..."
 	@touch $@
 
 # Add the unprivileged user - will be used for building the temporary tools
@@ -134,21 +149,22 @@ $(pg)/mount: unmount $(pg)/prep-mount
 	@touch $@
 
 $(pg)/prep-mount:
-	install -d $(MY_BUILD)/proc $(MY_BUILD)/sys $(MY_BUILD)/dev
-	-mknod -m 600 $(MY_BUILD)/dev/console c 5 1
-	-mknod -m 666 $(MY_BUILD)/dev/null c 1 3
-	-mknod -m 660 $(MY_BUILD)/dev/zero c 1 5
-	-mknod -m 444 $(MY_BUILD)/dev/random c 1 8
-	-mknod -m 444 $(MY_BUILD)/dev/urandom c 1 9
-	install -d $(MY_BUILD)/dev/pts $(MY_BUILD)/dev/shm
+	@$(INFO) "Preparing chroot environment..."
+	@install -d $(MY_BUILD)/proc $(MY_BUILD)/sys $(MY_BUILD)/dev
+	@-mknod -m 600 $(MY_BUILD)/dev/console c 5 1
+	@-mknod -m 666 $(MY_BUILD)/dev/null c 1 3
+	@-mknod -m 660 $(MY_BUILD)/dev/zero c 1 5
+	@-mknod -m 444 $(MY_BUILD)/dev/random c 1 8
+	@-mknod -m 444 $(MY_BUILD)/dev/urandom c 1 9
+	@install -d $(MY_BUILD)/dev/pts $(MY_BUILD)/dev/shm
+	@$(OK) "Chroot environment ready..."
 	@touch $@
 
 buildchroot: $(pg)/createfiles
 	@for pkg in $(STAGE2) ; do make packages/$${pkg}/stage2 || exit; done
 
 $(pg)/createfiles:
-	-for dir in /bin /etc /lib ; do install -dv $$dir ; done
-	@-$(TT)/bin/ln -s $(TT)/bin/sh /bin
+	@-for dir in /bin /etc /lib ; do install -dv $$dir ; done
 	@-$(TT)/bin/ln -s $(TT)/bin/cat /bin
 	@-$(TT)/bin/ln -s $(TT)/bin/pwd /bin
 	@-$(TT)/bin/ln -s $(TT)/bin/stty /bin
@@ -157,7 +173,7 @@ $(pg)/createfiles:
 	@touch $@
 
 package: unmount
-	@echo "Packaging build environment..."
+	@$(INFO) "Packaging build environment..."
 	@cd $(MY_BUILD) && \
 	 tar -cjf $(MY_BASE)/buildenv-$(shell date +%Y%m%d%H%M).tar.bz2 \
 	  --exclude=$(shell basename $(MY_BASE)) \
@@ -165,36 +181,31 @@ package: unmount
 	  --exclude=$(shell basename $(TT)) \
 	  --exclude=lost+found * 
 
+# Using || true to avoid make showing ignored errors via '-'
 unmount:
-	@-umount $(MY_BUILD)/dev/shm
-	@-umount $(MY_BUILD)/dev/pts
-	@-umount $(MY_BUILD)/proc
-	@-umount $(MY_BUILD)/sys
+	@umount $(MY_BUILD)/dev/shm 2>/dev/null || true
+	@umount $(MY_BUILD)/dev/pts 2>/dev/null || true
+	@umount $(MY_BUILD)/proc 2>/dev/null || true
+	@umount $(MY_BUILD)/sys 2>/dev/null || true
+	@for m in dev proc sys ; do if mount | grep $(MY_BUILD)/$$m ; then $(ERROR_MOUNT) ; exit 1 ; fi ; done
 	@-rm -f $(MY_BASE)/mount
 
 packages/stop/%:
-	@echo Stopping due to user specified stop point.
+	@$(OK) "Stopping due to user specified stop point."
 	@exit 1
 
-%clean:
-	make -C packages/$* clean
-
 %stage0:
-	make -C $* clean
-	hash -r && make -C $* stage0
+	@hash -r && make -C $* stage0
 %stage1:
-	make -C $* clean
-	hash -r && make -C $* stage1
+	@hash -r && make -C $* stage1
 %stage2:
-	make -C $* clean
-	hash -r && make -C $* stage2
+	@hash -r && make -C $* stage2
 
 clean: unmount
-	@-userdel -r $(USER)
-	@-groupdel $(USER)
+	@userdel -r $(USER) 2>/dev/null || true
+	@groupdel $(USER) 2>/dev/null || true
 	@rm -f $(pg)/*
-	@-for pkg in $(STAGE1); do make -C packages/$${pkg} clean ; done
-	@-for pkg in $(STAGE2); do make -C packages/$${pkg} clean ; done
+	@-for pkg in $(STAGE1) $(STAGE2); do make -C packages/$${pkg} clean ; done
 	@find packages -name "stage*" -exec rm -f \{} \;
 	@find packages -name "*.log" -exec rm -f \{} \;
 	@find packages -type l -exec rm -f \{} \;
@@ -205,8 +216,8 @@ scrub: clean
 	@for i in `find $(MY_BUILD) -mindepth 1 -maxdepth 1`; \
 	 do \
 	  case "$$i" in \
-		$(MY_BASE)|$(MY_BUILD)$(SRC)) echo Keeping "$$i" ;; \
-		*) echo Removing "$$i" ; rm -rf "$$i" ;; \
+		$(MY_BASE)|$(MY_BUILD)$(SRC)) $(OK) "Keeping $$i" ;; \
+		*) $(INFO) "Removing $$i" ; rm -rf "$$i" ;; \
 	  esac ; \
 	 done
 

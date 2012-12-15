@@ -16,8 +16,3 @@ stage2: Makefile $(FILE)
 compile-stage2:
 	python setup.py build
 	python setup.py install
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: clean compile-stage2

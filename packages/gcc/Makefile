@@ -96,8 +96,6 @@ compile-stage1:
 stage2: Makefile $(FILE)
 	$(sep_dir_build)
 
-CFLAGS += -fPIC
-
 compile-stage2:
 	$(musl_prep)
 	cd ../$(DIR) ; for file in $$(find gcc/config/i386 -name linux64.h -o -name linux.h) ; \
@@ -111,25 +109,18 @@ compile-stage2:
 	cd ../$(DIR) ; sed -i '/include <link.h>/s@^.*@/\*&\*/@' gcc/unwind-dw2-fde-glibc.c
 	cd ../$(DIR) ; sed -i 's,\./fixinc\.sh,-c true,' gcc/Makefile.in
 	cd ../$(DIR) ; rm -rf libstdc++-v3/config/os/gnu-linux && ln -s generic libstdc++-v3/config/os/gnu-linux
-	../$(DIR)/configure \
+	CFLAGS="$(CFLAGS) -fPIC" ../$(DIR)/configure \
 	--prefix='' \
 	--libexecdir=/lib \
-	--enable-languages=c,c++ \
 	--enable-threads=posix \
 	--disable-tls \
-	--with-system-zlib \
 	--disable-bootstrap \
 	--disable-libmudflap \
-	--disable-multilib
-	make $(PM)
+	--disable-multilib \
+	--enable-languages=c,c++
+	make $(PM) BOOT_LDFLAGS="-static" LDFLAGS="-static"
 	make install
 	ln -sf ../bin/cpp /lib
 	ln -sf gcc /bin/cc
 	echo 'main(){}' | cc -x c - -v -lrt -Wl,--verbose
 	rm -f a.out
-
-clean:
-	-rm -rf $(DIR)
-	-rm -rf $(NM)-build
-
-.PHONY: compile-stage1 compile-stage0 compile-stage2 clean

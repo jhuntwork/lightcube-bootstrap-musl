@@ -56,18 +56,12 @@ compile-stage2:
 	$(musl_prep)
 	cd ../$(DIR) ; rm -fv etc/standards.info
 	cd ../$(DIR) ; sed -i '/^INFO/s/standards.info //' etc/Makefile.in
-	CC="gcc -static" \
+	LDFLAGS="-Wl,-static" \
 	../$(DIR)/configure \
-	--prefix='' \
-	--disable-werror \
-	--disable-nls \
-	--disable-shared \
-	--libdir=/lib
-	make $(PM)
-	make install-gas install-ld install-binutils
-
-clean:
-	-rm -rf $(DIR)
-	-rm -rf $(NM)-build
-
-.PHONY: compile-stage0 compile-stage1 compile-stage2 clean
+        --prefix=/ \
+        --disable-shared \
+        --disable-werror \
+        --disable-nls \
+        --disable-install-libbfd
+	make $(PM) tooldir=/
+	make tooldir=/ install-gas install-ld install-binutils

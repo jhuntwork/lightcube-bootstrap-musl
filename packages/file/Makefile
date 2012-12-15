@@ -17,13 +17,8 @@ compile-stage2:
 	$(musl_prep)
 	# Move the datadir location from /usr/share/misc to /usr/share/file
 	sed -i 's/misc/file/' configure
-	./configure --prefix='' \
+	LDFLAGS="--static" ./configure --prefix='' \
 	--disable-shared \
 	--enable-static
 	make V=1 $(PM)
 	make install
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: clean compile-stage2

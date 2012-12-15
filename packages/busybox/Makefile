@@ -42,8 +42,3 @@ compile-stage2:
 	make V=1 HOSTCC="gcc -D_GNU_SOURCE" $(PM)
 	make V=1 HOSTCC="gcc -D_GNU_SOURCE" install
 	chmod u+s /bin/busybox
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: compile-stage1 clean compile-stage2

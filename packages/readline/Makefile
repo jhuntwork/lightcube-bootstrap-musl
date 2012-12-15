@@ -21,8 +21,3 @@ compile-stage2:
           --prefix=''
 	make $(PM) SHLIB_LIBS=-lncurses
 	make install
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: clean compile-stage2

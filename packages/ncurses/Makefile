@@ -28,8 +28,3 @@ compile-stage2:
           --mandir=/share/man
 	make $(PM)
 	make install
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: clean compile-stage2

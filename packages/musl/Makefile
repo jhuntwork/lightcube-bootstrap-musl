@@ -1,12 +1,12 @@
 # musl Makefile
 
 NM= musl
-VRS= 0.9.6
+VRS= 0.9.8
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://www.etalabs.net/musl/releases/$(FILE)
-SHA256-$(FILE)= c447b239ae1bbcd6750a077c1170a92e7a5ea19cc327c3cf5b821f1b677ca208
+SHA256-$(FILE)= f4d3b85639b8ab23065dde9173e7e151e735943d2d2d6deb39b2dfc9bd05a6ed
 
 include $(MY_ROOT)/scripts/functions.mk
 
@@ -50,8 +50,3 @@ compile-stage2:
 	 > `dirname $$(gcc --print-libgcc-file-name)`/specs
 	echo 'main(){}' | cc -x c - -v -lrt -Wl,--verbose
 	readelf -l a.out | grep "interpreter: /lib/"
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: compile-stage1 compile-prebuild clean compile-stage2

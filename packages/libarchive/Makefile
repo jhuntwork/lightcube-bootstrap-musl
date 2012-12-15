@@ -18,8 +18,3 @@ compile-stage2:
 	./configure --prefix=/
 	make $(PM)
 	make install
-
-clean:
-	-rm -rf $(DIR)
-
-.PHONY: clean compile-stage2
