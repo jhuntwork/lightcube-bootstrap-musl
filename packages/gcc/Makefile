@@ -113,7 +113,7 @@ compile-stage2:
 	--prefix='' \
 	--libexecdir=/lib \
 	--enable-threads=posix \
-	--disable-tls \
+	--enable-tls \
 	--disable-bootstrap \
 	--disable-libmudflap \
 	--disable-multilib \

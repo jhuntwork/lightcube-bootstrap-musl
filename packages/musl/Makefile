@@ -1,12 +1,12 @@
 # musl Makefile
 
 NM= musl
-VRS= 0.9.8
+VRS= 0.9.9
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://www.etalabs.net/musl/releases/$(FILE)
-SHA256-$(FILE)= f4d3b85639b8ab23065dde9173e7e151e735943d2d2d6deb39b2dfc9bd05a6ed
+SHA256-$(FILE)= 91f67d4e1e696df344c93b46bfcb1f6ad6d820e6ae544e3673f496e2d308f492
 
 include $(MY_ROOT)/scripts/functions.mk
 
@@ -20,8 +20,6 @@ compile-stage1:
 	./configure \
 	  --prefix=$(TT) \
 	  --syslibdir=$(TT)/lib
-	# -ffloat-store contributes significantly to size of libc.a
-	sed -i 's@-ffloat-store@@' config.mak
 	make CROSS_COMPILE=$(BUILD_ARCH)- libdir=$(TT)/lib $(PM)
 	make CROSS_COMPILE=$(BUILD_ARCH)- libdir=$(TT)/lib install
 	echo 'main(){}' | $(BUILD_ARCH)-gcc -x c - -v -lrt -Wl,--verbose
@@ -35,8 +33,6 @@ compile-stage2:
 	sed -i 's@-Os@-O3@g' configure
 	CFLAGS="" ./configure \
 	  --prefix=/
-	# -ffloat-store contributes significantly to size of libc.a
-	sed -i 's@-ffloat-store@@' config.mak
 	make $(PM)
 	make install
 	mv $(TT)/bin/ld $(TT)/bin/ld-old
