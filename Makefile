@@ -156,6 +156,7 @@ $(pg)/prep-mount:
 	@-mknod -m 660 $(MY_BUILD)/dev/zero c 1 5
 	@-mknod -m 444 $(MY_BUILD)/dev/random c 1 8
 	@-mknod -m 444 $(MY_BUILD)/dev/urandom c 1 9
+	@-mknod -m 666 $(MY_BUILD)/dev/tty c 5 0
 	@install -d $(MY_BUILD)/dev/pts $(MY_BUILD)/dev/shm
 	@$(OK) "Chroot environment ready..."
 	@touch $@
