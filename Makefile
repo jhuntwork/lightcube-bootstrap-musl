@@ -2,7 +2,7 @@
 STAGE0= binutils gcc linux-headers
 STAGE1= musl binutils gcc busybox patch make
 STAGE2= linux-headers musl zlib binutils gcc file ncurses busybox readline \
-bash make patch perl openssl curl libarchive pkg-config m4 autoconf automake \
+bash make patch perl openssl curl python libarchive pkg-config m4 autoconf automake \
 git pacman
 # The following are additional packages for extending functionality in pacman:
 # python libelf pyalpm pyelftools distribute namcap
@@ -121,7 +121,7 @@ $(pg)/builduser:
 	@touch $@
 
 $(pg)/build-tools:
-	@$(SUCMD) $(USER) -c "$(toolsenv) 'umask 022 && cd $(MY_ROOT) && make tools'"
+	@$(SUCMD) "$(toolsenv) 'umask 022 && cd $(MY_ROOT) && make tools'" $(USER)
 	@install -dv $(TT)/etc
 	@cp /etc/resolv.conf $(TT)/etc
 	@rm -rf $(TT)/share/man $(TT)/share/info $(TT)/info $(TT)/man    
