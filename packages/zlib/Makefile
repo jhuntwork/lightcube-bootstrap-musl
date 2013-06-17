@@ -1,12 +1,12 @@
 # Zlib Makefile
 
 NM= zlib
-VRS= 1.2.7
+VRS= 1.2.8
 DIR= $(NM)-$(VRS)
 
-FILE= $(DIR).tar.bz2
+FILE= $(DIR).tar.gz
 URL-$(FILE)= http://zlib.net/$(FILE)
-SHA256-$(FILE)= 49e2e9658dfb036900da6ea0267a737fa3c4eee6666776d378c79d52e9334934
+SHA256-$(FILE)= 36658cb768a54c1d4dec43c3116c27ed893e88b02ecfcb44f2166f9c0b7f2a0d
 
 include $(MY_ROOT)/scripts/functions.mk
 
