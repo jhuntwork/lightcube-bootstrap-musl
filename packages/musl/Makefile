@@ -1,19 +1,28 @@
 # musl Makefile
 
 NM= musl
-VRS= 0.9.9
+VRS= 0.9.10
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://www.etalabs.net/musl/releases/$(FILE)
-SHA256-$(FILE)= 91f67d4e1e696df344c93b46bfcb1f6ad6d820e6ae544e3673f496e2d308f492
+SHA256-$(FILE)= 71fc00733a3ee45fab342870ccd84d33d079e64f2d6fdcfb8b463a769c3ff391
+
+PATCH= musl-upstream-fixes.patch
 
 include $(MY_ROOT)/scripts/functions.mk
+
+stage0: $(FILE)
+	$(std_build)
+
+compile-stage0:
+	make ARCH=$(MY_ARCH) prefix=$(TT) install-headers
 
 stage1: $(FILE)
 	$(std_build)
 
 compile-stage1:
+	patch -Np1 -i ../$(PATCH)
 	# -O3 boosts performance of some features, such as regex
 	sed -i 's@-Os@-O3@g' configure
 	CFLAGS="" CC=$(BUILD_ARCH)-gcc \
@@ -22,13 +31,14 @@ compile-stage1:
 	  --syslibdir=$(TT)/lib
 	make CROSS_COMPILE=$(BUILD_ARCH)- libdir=$(TT)/lib $(PM)
 	make CROSS_COMPILE=$(BUILD_ARCH)- libdir=$(TT)/lib install
-	echo 'main(){}' | $(BUILD_ARCH)-gcc -x c - -v -lrt -Wl,--verbose
+	echo 'int main(){return 1;}' | $(BUILD_ARCH)-gcc -x c - -v -lrt -Wl,--verbose
 	readelf -l a.out | grep $(TT)
 
 stage2: $(FILE)
 	$(std_build)
 
 compile-stage2:
+	patch -Np1 -i ../$(PATCH)
 	# -O3 boosts performance of some features, such as regex
 	sed -i 's@-Os@-O3@g' configure
 	CFLAGS="" ./configure \

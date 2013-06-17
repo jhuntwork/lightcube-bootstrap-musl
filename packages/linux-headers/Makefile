@@ -1,12 +1,10 @@
-# Linux-headers Makefile
-
 NM= linux
-VRS= 3.6.2
+VRS= 3.9
 DIR= $(NM)-$(VRS)
 
-FILE= $(DIR).tar.bz2
-URL-$(FILE)= http://www.kernel.org/pub/linux/kernel/v3.0/$(FILE)
-SHA256-$(FILE)= 02af064f36dd9572e46c7b0b1b9b6a5fa18cab7f93dc7f002d3eb16cab61dc2a
+FILE= $(DIR).tar.xz
+URL-$(FILE)= http://www.kernel.org/pub/linux/kernel/v3.x/$(FILE)
+SHA256-$(FILE)= 60bc3e64ee5dc778de2cd7cd7640abf518a4c9d4f31b8ed624e16fad53f54541
 
 PATCH= linux-noperl-headers.patch
 
@@ -17,14 +15,14 @@ stage0: $(FILE)
 
 compile-stage0:
 	patch -Np1 -i ../$(PATCH)
-	install -dv $(TT)/include
 	# Fix a non-posix issue with a script
 	sed -i 's@ ERR@@' scripts/link-vmlinux.sh
+	install -dv $(TT)/include
 	make mrproper
 	make INSTALL_HDR_PATH=dest headers_install
 	cp -rv dest/include/* $(TT)/include
 
-stage2: Makefile $(FILE)
+stage2: $(FILE)
 	$(std_build)
 
 compile-stage2:

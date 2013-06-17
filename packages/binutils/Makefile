@@ -1,12 +1,13 @@
-# Binutils Makefile
-
 NM= binutils
-VRS= 2.22
+#VRS= 2.23.2
+VRS= 397a64b3
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.bz2
-URL-$(FILE)= http://ftp.gnu.org/gnu/binutils/$(FILE)
-SHA256-$(FILE)= 6c7af8ed1c8cf9b4b9d6e6fe09a3e1d3d479fe63984ba8b9b26bf356b6313ca9
+#URL-$(FILE)= http://ftp.gnu.org/gnu/$(NM)/$(FILE)
+URL-$(FILE)= http://landley.net/aboriginal/mirror/$(FILE)
+#SHA256-$(FILE)= fe914e56fed7a9ec2eb45274b1f2e14b0d8b4f41906a5194eac6883cfe5c1097
+SHA256-$(FILE)= c7e0f0dfd2f53df76d2196b5bec0a2f0922c68c8719f9127efaf703c4f35939c
 
 include $(MY_ROOT)/scripts/functions.mk
 
@@ -43,6 +44,7 @@ compile-stage1:
 	--disable-werror \
 	--disable-shared \
 	--with-lib-path=$(TT)/lib
+	echo "MAKEINFO = :" >> Makefile
 	make $(PM)
 	make install-gas install-ld install-binutils
 	make -C ld clean
@@ -63,5 +65,6 @@ compile-stage2:
         --disable-werror \
         --disable-nls \
         --disable-install-libbfd
+	echo "MAKEINFO = :" >> Makefile
 	make $(PM) tooldir=/
 	make tooldir=/ install-gas install-ld install-binutils

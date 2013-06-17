@@ -74,18 +74,21 @@ compile-stage1:
 	cd ../$(DIR) ; sed -i '/include <link.h>/s@^.*@/\*&\*/@' gcc/unwind-dw2-fde-glibc.c
 	cd ../$(DIR) ; sed -i 's,\./fixinc\.sh,-c true,' gcc/Makefile.in
 	cd ../$(DIR) ; rm -rf libstdc++-v3/config/os/gnu-linux && ln -s generic libstdc++-v3/config/os/gnu-linux
-	CC="$(BUILD_ARCH)-gcc" CFLAGS="-D_GNU_SOURCE" \
-	AR="$(BUILD_ARCH)-ar" RANLIB="$(BUILD_ARCH)-ranlib" \
-	../$(DIR)/configure \
-	--prefix=$(TT) \
-	--with-local-prefix=$(TT) \
-	--disable-shared \
-	--disable-multilib \
-	--disable-libgomp \
-	--disable-libssp \
-	--disable-libmudflap \
-	--disable-bootstrap \
-	--enable-languages=c,c++
+	CC="$(BUILD_ARCH)-gcc" \
+	   CFLAGS="-D_GNU_SOURCE -fPIC" \
+	   CXXFLAGS="$(CFLAGS) -fPIC" \
+		AR="$(BUILD_ARCH)-ar" \
+		RANLIB="$(BUILD_ARCH)-ranlib" \
+		../$(DIR)/configure \
+		--prefix=$(TT) \
+		--with-local-prefix=$(TT) \
+		--disable-shared \
+		--disable-multilib \
+		--disable-libgomp \
+		--disable-libssp \
+		--disable-libmudflap \
+		--disable-bootstrap \
+		--enable-languages=c,c++
 	make $(PM)
 	make install
 	ln -sf gcc $(TT)/bin/cc
@@ -109,11 +112,12 @@ compile-stage2:
 	cd ../$(DIR) ; sed -i '/include <link.h>/s@^.*@/\*&\*/@' gcc/unwind-dw2-fde-glibc.c
 	cd ../$(DIR) ; sed -i 's,\./fixinc\.sh,-c true,' gcc/Makefile.in
 	cd ../$(DIR) ; rm -rf libstdc++-v3/config/os/gnu-linux && ln -s generic libstdc++-v3/config/os/gnu-linux
-	CFLAGS="$(CFLAGS) -fPIC" ../$(DIR)/configure \
+	CFLAGS="$(CFLAGS) -fPIC" CXXFLAGS="$(CFLAGS) -fPIC" ../$(DIR)/configure \
 	--prefix='' \
 	--libexecdir=/lib \
 	--enable-threads=posix \
 	--enable-tls \
+	--disable-shared \
 	--disable-bootstrap \
 	--disable-libmudflap \
 	--disable-multilib \

@@ -14,10 +14,11 @@ stage2: Makefile $(FILE)
 compile-stage2:
 	sed -i 's@/usr/bin/perl@/bin/perl@g' `grep -lr "/usr/bin/perl" .`
 	sed -i '/absolute directory/d' configure
-	CC="gcc -static" ./configure \
+	./configure \
 	 --prefix='' \
-	 --libexecdir=~/.git-core \
+	 --libexecdir=/lib/git-core \
 	 --without-tcltk \
-	 --without-python
+	 --without-python \
+	 --with-curl
 	make NO_MSGFMT=1 NO_GETTEXT=1 V=1 $(PM)
 	make NO_MSGFMT=1 NO_GETTEXT=1 install

@@ -8,12 +8,19 @@ FILE= $(DIR).tar.bz2
 URL-$(FILE)= http://busybox.net/downloads/$(FILE)
 SHA256-$(FILE)= eb13ff01dae5618ead2ef6f92ba879e9e0390f9583bd545d8789d27cf39b6882
 
+PATCH1= busybox-xz-bugfix1.patch
+PATCH2= busybox-xz-bugfix2.patch
+PATCH3= busybox-xz-bugfix3.patch
+
 include $(MY_ROOT)/scripts/functions.mk
 
 stage1: $(FILE)
 	$(std_build)
 
 compile-stage1:
+	patch -Np1 -i ../$(PATCH1)
+	patch -Np1 -i ../$(PATCH2)
+	patch -Np1 -i ../$(PATCH3)
 	sed '/CONFIG_PREFIX/s@=.*@="$(TT)"@' ../busybox-config >.config
 	sed -i '/netinet\/ether/d' networking/arp.c
 	sed -i '/net\/if_slip/d' networking/ifconfig.c
@@ -31,6 +38,9 @@ stage2: Makefile $(FILE)
 	$(std_build)
 
 compile-stage2:
+	patch -Np1 -i ../$(PATCH1)
+	patch -Np1 -i ../$(PATCH2)
+	patch -Np1 -i ../$(PATCH3)
 	sed '/CONFIG_PREFIX/s@=.*@="/"@' ../busybox-config >.config
 	sed -i '/netinet\/ether/d' networking/arp.c
 	sed -i '/net\/if_slip/d' networking/ifconfig.c
