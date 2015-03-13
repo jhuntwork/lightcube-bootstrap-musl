@@ -1,10 +1,10 @@
 NM= automake
-VRS= 1.12.5
+VRS= 1.14.1
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.xz
 URL-$(FILE)= http://ftp.gnu.org/gnu/$(NM)/$(FILE)
-SHA256-$(FILE)= 35dac82775f100de4699818cf62dda341cd6020189e5345ab1461859f35097cc
+SHA256-$(FILE)= a9b4f04b8b69cac2e832a38a718943aa976dbdad0097211f8b3448afdacf0669
 
 include $(MY_ROOT)/scripts/functions.mk
 

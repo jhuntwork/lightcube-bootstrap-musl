@@ -14,7 +14,6 @@ stage1: $(FILE)
 	$(std_build)
 
 compile-stage1:
-	sed -i 's/linux-gnu/linux-musl/g' `find . -name config.guess -o -name config.sub`
 	CC="gcc -D__BEOS__ -D_GNU_SOURCE" \
 	./configure --prefix=$(TT) \
 	--disable-nls
@@ -25,7 +24,6 @@ stage2: Makefile $(FILE)
 	$(std_build)
 
 compile-stage2:
-	sed -i 's/linux-gnu/linux-musl/g' `find . -name config.guess -o -name config.sub`
 	CC="gcc -D__BEOS__" \
 	./configure \
 	--prefix='' \

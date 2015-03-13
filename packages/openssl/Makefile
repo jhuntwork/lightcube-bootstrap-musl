@@ -1,12 +1,12 @@
 # openssl Makefile
 
 NM= openssl
-VRS= 1.0.1c
+VRS= 1.0.1g
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.gz
 URL-$(FILE)= http://www.openssl.org/source/$(FILE)
-SHA256-$(FILE)= 2a9eb3cd4e8b114eb9179c0d3884d61658e7d8e8bf4984798a5f5bd48e325ebe
+SHA256-$(FILE)= 53cb818c3b90e507a8348f4f5eaedb05d8bfe5358aabb508b7263cc670c3e028
 
 PATCH= $(NM)-parallel-build.patch
 

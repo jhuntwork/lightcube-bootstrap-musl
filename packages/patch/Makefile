@@ -14,7 +14,6 @@ stage1: $(FILE)
 	$(std_build)
 
 compile-stage1:
-	$(musl_prep)
 	./configure --prefix=$(TT)
 	make V=1 $(PM)
 	make install
@@ -23,7 +22,6 @@ stage2: Makefile $(FILE)
 	$(std_build)
 
 compile-stage2:
-	$(musl_prep)
 	./configure --prefix=''
 	make V=1 $(PM)
 	make install

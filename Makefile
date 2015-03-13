@@ -1,9 +1,10 @@
 # Build Order
 STAGE0= binutils gcc linux-headers
 STAGE1= musl binutils gcc busybox patch make
-STAGE2= linux-headers musl zlib binutils gcc file ncurses busybox readline \
-bash make patch perl openssl curl python libarchive pkg-config m4 autoconf automake \
-git pacman
+STAGE2= linux-headers musl binutils gcc file ncurses busybox make patch \
+zlib perl openssl pkg-config m4 autoconf automake \
+readline bash patch perl openssl curl \
+libarchive git pacman
 # The following are additional packages for extending functionality in pacman:
 # python libelf pyalpm pyelftools distribute namcap
 
