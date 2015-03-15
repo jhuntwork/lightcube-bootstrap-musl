@@ -125,7 +125,7 @@ $(pg)/build-tools:
 	@$(SUCMD) "$(toolsenv) 'umask 022 && cd $(MY_ROOT) && make tools'" $(USER)
 	@install -dv $(TT)/etc
 	@cp /etc/resolv.conf $(TT)/etc
-	@rm -rf $(TT)/share/man $(TT)/share/info $(TT)/info $(TT)/man    
+	@rm -rf $(TT)/share/man $(TT)/share/info $(TT)/info $(TT)/man
 	@-ln -s $(TT)/bin/sh $(MY_BUILD)/bin/sh
 	@-ln -s $(TT)/bin/bash $(MY_BUILD)/bin/bash
 	@-ln -s $(TT)/bin/env $(MY_BUILD)/bin/env
@@ -181,7 +181,7 @@ package: unmount
 	  --exclude=$(shell basename $(MY_BASE)) \
 	  --exclude=$(shell basename $(SRC)) \
 	  --exclude=$(shell basename $(TT)) \
-	  --exclude=lost+found * 
+	  --exclude=lost+found *
 
 # Using || true to avoid make showing ignored errors via '-'
 unmount:
@@ -215,12 +215,9 @@ clean: unmount
 	@rm -f $(TT) $(SRC) $(MY_ROOT)
 
 scrub: clean
-	@for i in `find $(MY_BUILD) -mindepth 1 -maxdepth 1`; \
-	 do \
-	  case "$$i" in \
-		$(MY_BASE)|$(MY_BUILD)$(SRC)) $(OK) "Keeping $$i" ;; \
-		*) $(INFO) "Removing $$i" ; rm -rf "$$i" ;; \
-	  esac ; \
-	 done
+	@find $(MY_BUILD) -mindepth 1 -maxdepth 1 \
+         -not -samefile $(MY_BASE) -not -samefile $(MY_BUILD)$(SRC) \
+	 -printf "${CYAN}***${NORMAL} Removing %p\n" -exec rm -rf -- {} +
+
 
 .PHONY: unmount clean buildchroot tools
