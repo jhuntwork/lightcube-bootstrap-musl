@@ -1,10 +1,10 @@
-NM= gettext
-VRS= 0.19.4
+NM= libtool
+VRS= 2.4.6
 DIR= $(NM)-$(VRS)
 
 FILE= $(DIR).tar.xz
 URL-$(FILE)= http://ftp.gnu.org/gnu/$(NM)/$(FILE)
-SHA256-$(FILE)= 719adadb8bf3e36bac52c243a01c0add18d23506a3a40437e6f5899ceab18d20
+SHA256-$(FILE)= 7c87a8c2c8c0fc9cd5019e402bed4292462d00a718a7cd5f11218153bf28b26f
 
 include $(MY_ROOT)/scripts/functions.mk
 

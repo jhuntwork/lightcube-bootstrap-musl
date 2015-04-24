@@ -51,9 +51,12 @@ define sep_dir_build_noclean
 endef
 
 define musl_prep
-	sed -i -e 's/linux-gnu/linux-musl/g' \
+	FILES=`find ../$(DIR)/ -name "confi*.guess" -o -name "confi*.sub"`
+	if [ ! -z "$$FILES" ]; \
+	then sed -i -e 's/linux-gnu/linux-musl/g' \
 	       -e 's@LIBC=gnu@LIBC=musl@' \
-               `find ../$(DIR)/ -name "confi*.guess" -o -name "confi*.sub"`
+		$$FILES; \
+	fi
 endef
 
 # This takes the form of 'download [filename] [url] [sha256sum]'
