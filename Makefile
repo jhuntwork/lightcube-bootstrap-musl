@@ -4,7 +4,7 @@ STAGE1= musl binutils gcc busybox patch make
 STAGE2= linux-headers musl binutils gcc file ncurses busybox make patch \
 zlib perl openssl pkg-config m4 autoconf automake \
 readline bash patch perl openssl curl \
-libarchive git pacman
+libarchive git gettext libtool pacman
 # The following are additional packages for extending functionality in pacman:
 # python libelf pyalpm pyelftools distribute namcap
 
@@ -181,7 +181,8 @@ package: unmount
 	  --exclude=$(shell basename $(MY_BASE)) \
 	  --exclude=$(shell basename $(SRC)) \
 	  --exclude=$(shell basename $(TT)) \
-	  --exclude=lost+found *
+	  --exclude=src \
+	  --exclude=lost+found ./*
 
 # Using || true to avoid make showing ignored errors via '-'
 unmount:
